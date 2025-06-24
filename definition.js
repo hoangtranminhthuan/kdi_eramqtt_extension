@@ -28,9 +28,12 @@ Blockly.Blocks['era_mqtt_connect'] = {
   init: function() {
     this.jsonInit({
       colour: '#ff8d12',
-      message0: 'kết nối Era với WiFi %1 password %2 token %3',
+      message0: 'kết nối Era với WiFi %1',
       args0: [
-        { type: 'field_input', name: 'WIFI', text: 'ssid' },
+        { type: 'field_input', name: 'WIFI', text: 'ssid' }
+      ],
+      message1: 'password %1 token %2',
+      args1: [
         { type: 'field_input', name: 'PASSWORD', text: 'password' },
         { type: 'field_input', name: 'TOKEN', text: 'chip01' }
       ],
@@ -73,7 +76,7 @@ Blockly.Blocks['era_mqtt_publish'] = {
 Blockly.Python['era_mqtt_publish'] = function(block) {
   Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import MQTT';
   var value = Blockly.Python.valueToCode(block, 'MESSAGE', Blockly.Python.ORDER_ATOMIC) || '0';
-  var code = 'mqtt.publish(' + value + ')\n';
+  var code = 'mqtt.publish(' + value + ')';
   return code;
 };
 
