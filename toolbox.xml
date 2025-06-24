@@ -1,0 +1,29 @@
+<xml xmlns="https://developers.google.com/blockly/xml" id="toolbox" style="display: none">
+  <category id="era-iot" name="ERA IOT" colour="#ff8d12" icon="wifi">
+    <block type="era_mqtt_connect" />
+    <block type="era_mqtt_publish">
+      <value name="MESSAGE">
+        <shadow type="text">
+          <field name="TEXT">1</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="era_mqtt_on_receive_message" />
+    <block type="era_mqtt_compare_value" >
+      <value name="VALUE">
+        <shadow type="text">
+          <field name="TEXT">Hello</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="era_mqtt_compare_value" >
+      <value name="VALUE">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="era_mqtt_get_value" />
+    <block type="era_mqtt_get_topic" />
+  </category>
+</xml>
