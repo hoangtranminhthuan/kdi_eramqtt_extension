@@ -1,5 +1,5 @@
 import ujson
-from mqtt_as1 import MQTTClient, config, match_mqtt_topic
+from mqtt_as import MQTTClient, config, match_mqtt_topic
 
 ERA_BASE_TOPIC                                      = 'eoh/chip/%s'
 ERA_PREFIX_LWT_TOPIC                                = '/is_online'
