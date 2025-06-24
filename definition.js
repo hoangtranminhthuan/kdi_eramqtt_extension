@@ -22,15 +22,16 @@ var virtualPins = [
   ["V20", "20"]
 ];
 
+// ERA MQTT Blockly Definition
+
 Blockly.Blocks['era_mqtt_connect'] = {
   init: function() {
     this.jsonInit({
       colour: '#ff8d12',
-      message0: 'kết nối Era với WiFi %1 password %2 %3 token %4',
+      message0: 'kết nối Era với WiFi %1 password %2 token %3',
       args0: [
         { type: 'field_input', name: 'WIFI', text: 'ssid' },
         { type: 'field_input', name: 'PASSWORD', text: 'password' },
-        { type: 'input_dummy' },
         { type: 'field_input', name: 'TOKEN', text: 'chip01' }
       ],
       previousStatement: null,
@@ -56,16 +57,14 @@ Blockly.Blocks['era_mqtt_publish'] = {
   init: function() {
     this.jsonInit({
       colour: '#ff8d12',
-      message0: 'gửi %1 %2 lên %3 %4',
+      message0: 'gửi %1 lên %2',
       args0: [
-        { type: 'input_dummy' },
         { type: 'input_value', name: 'MESSAGE' },
-        { type: 'field_dropdown', name: 'TOPIC', options: virtualPins },
-        { type: 'input_dummy' }
+        { type: 'field_dropdown', name: 'TOPIC', options: virtualPins }
       ],
       previousStatement: null,
       nextStatement: null,
-      tooltip: 'Publish giá trị đến topic /info',
+      tooltip: 'Publish giá trị đến topic lựa chọn',
       helpUrl: ''
     });
   }
@@ -82,10 +81,9 @@ Blockly.Blocks['era_mqtt_on_receive_message'] = {
   init: function() {
     this.jsonInit({
       colour: '#ff8d12',
-      message0: 'khi %1 nhận thông tin %2 %3',
+      message0: 'khi %1 nhận thông tin thực thi',
       args0: [
         { type: 'field_dropdown', name: 'TOPIC', options: virtualPins },
-        { type: 'input_dummy' },
         { type: 'input_statement', name: 'ACTION' }
       ],
       previousStatement: null,
@@ -102,7 +100,7 @@ Blockly.Python['era_mqtt_on_receive_message'] = function(block) {
   var statements = Blockly.Python.statementToCode(block, 'ACTION');
   var funcName = Blockly.Python.provideFunction_(
     'on_receive_virtual_' + pin,
-    ['def ' + Blockly.Python.FUNCTION_NAME_PLACEHOLDER_ + '(msg):',
+    ['def ' + Blockly.Python.FUNCTION_NAME_PLACEHOLDER_ + '(topic, msg):',
      statements || Blockly.Python.PASS
     ]
   );
@@ -115,10 +113,9 @@ Blockly.Blocks['era_mqtt_compare_value'] = {
     this.jsonInit({
       colour: '#ff8d12',
       output: 'Boolean',
-      message0: 'giá trị nhận được là %1 %2',
+      message0: 'giá trị nhận được == %1',
       args0: [
-        { type: 'input_value', name: 'VALUE' },
-        { type: 'input_dummy' }
+        { type: 'input_value', name: 'VALUE' }
       ],
       tooltip: '',
       helpUrl: ''
