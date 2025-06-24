@@ -1,75 +1,143 @@
-Blockly.Blocks["yolobit_mqtt_connect_wifi"] = {
-  init: function () {
-    this.jsonInit({
-      colour: "#e65722",
-      nextStatement: null,
-      tooltip: "Kết nối vào mạng WiFi",
-      message0: "kết nối WiFi %1 %2 mật khẩu %3 %4",
-      previousStatement: null,
-      args0: [
-        { type: "input_dummy" },
-        { type: "input_value", name: "WIFI", check: "String" },
-        { type: "input_dummy" },
-        { type: "input_value", name: "PASSWORD", check: "String" },
-      ],
-      helpUrl: "",
-    });
-  },
-};
+var virtualPins = [
+  [
+    "V0",
+    "0"
+  ],
+  [
+    "V1",
+    "1"
+  ],
+  [
+    "V2",
+    "2"
+  ],
+  [
+    "V3",
+    "3"
+  ],
+  [
+    "V4",
+    "4"
+  ],
+  [
+    "V5",
+    "5"
+  ],
+  [
+    "V6",
+    "6"
+  ],
+  [
+    "V7",
+    "7"
+  ],
+  [
+    "V8",
+    "8"
+  ],
+  [
+    "V9",
+    "9"
+  ],
+  [
+    "V10",
+    "10"
+  ],
+  [
+    "V11",
+    "11"
+  ],
+  [
+    "V12",
+    "12"
+  ],
+  [
+    "V13",
+    "13"
+  ],
+  [
+    "V14",
+    "14"
+  ],
+  [
+    "V15",
+    "15"
+  ],
+  [
+    "V16",
+    "16"
+  ],
+  [
+    "V17",
+    "17"
+  ],
+  [
+    "V18",
+    "18"
+  ],
+  [
+    "V19",
+    "19"
+  ],
+  [
+    "V20",
+    "20"
+  ]
+];
 
-Blockly.Blocks["yolobit_mqtt_connect_default_servers"] = {
+Blockly.Blocks["era_mqtt_connect"] = {
   init: function () {
     this.jsonInit({
-      colour: "#e65722",
+      colour: "#ff8d12",
       nextStatement: null,
-      tooltip: "Kết nối đến server MQTT được chọn",
-      message0: "kết nối đến server %1 với username %2 key %3 %4",
+      tooltip: "Kết nối đến server Era",
+      message0: "kết nối Era với WiFi %1 password %2 %3 token %4",
       previousStatement: null,
       args0: [
         {
-          type: "field_dropdown",
-          name: "SERVER",
-          options: [
-            ["OhStem", "mqtt.ohstem.vn"],
-            ["Adafruit.IO", "io.adafruit.com"]
-          ],
+          "type": "field_input",
+          "name": "WIFI",
+          "text": "ssid"
         },
-        { type: "input_value", name: "USERNAME", check: "String" },
-        { type: "input_value", name: "KEY", check: "String" },
-        { type: "input_dummy" },
+        {
+          "type": "field_input",
+          "name": "PASSWORD",
+          "text": "password"
+        },
+        {
+          "type": "input_dummy"
+        },
+        {
+          "type": "field_input",
+          "name": "TOKEN",
+          "text": "xxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx"
+        }
       ],
       helpUrl: "",
     });
   },
 };
 
-Blockly.Blocks["yolobit_mqtt_connect_custom_servers"] = {
-  init: function () {
-    this.jsonInit({
-      colour: "#e65722",
-      nextStatement: null,
-      tooltip: "Kết nối đến server MQTT được chọn",
-      message0: "kết nối đến server %1 port %2 username %3 password %4 %5",
-      previousStatement: null,
-      args0: [
-        { type: "input_value", name: "SERVER", check: "String" },
-        { type: "input_value", name: "PORT", check: "Number" },
-        { type: "input_value", name: "USERNAME", check: "String" },
-        { type: "input_value", name: "KEY", check: "String" },
-        { type: "input_dummy" },
-      ],
-      helpUrl: "",
-    });
-  },
+Blockly.Python['era_mqtt_connect'] = function(block) {
+  var wifi = block.getFieldValue('WIFI');
+  var password = block.getFieldValue('PASSWORD');
+  var token = block.getFieldValue('TOKEN');
+
+  Blockly.Python.definitions_['import_era_iot'] = 'from era_iot import *';
+  Blockly.Python.definitions_['init_era_mqtt'] = "era_iot = EraIoT('" + wifi + "', '" + password + "', '" + token + "')\n";
+  
+  // TODO: Assemble Python into code variable.
+  var code = "await era_iot.connect()\n";
+  return code;
 };
 
-Blockly.Blocks["yolobit_mqtt_publish"] = {
+Blockly.Blocks["era_mqtt_publish"] = {
   init: function () {
     this.jsonInit({
-      colour: "#e65722",
+      colour: "#ff8d12",
       nextStatement: null,
       tooltip: "Gửi thông tin lên server",
-      message0: "gửi %1 %2 đến chủ đề %3 %4",
+      message0: "gửi %1 %2 lên %3 %4",
       previousStatement: null,
       args0: [
         {
@@ -80,52 +148,40 @@ Blockly.Blocks["yolobit_mqtt_publish"] = {
           name: "MESSAGE",
         },
         {
-          type: "input_dummy",
+          type: "field_dropdown",
+          name: "TOPIC",
+          options: virtualPins,
         },
         {
-          type: "input_value",
-          name: "TOPIC",
-        },
+          type: "input_dummy",
+        }
       ],
       helpUrl: "",
     });
   },
 };
 
-
-Blockly.Blocks["yolobit_mqtt_check_message"] = {
-  init: function () {
-    this.jsonInit({
-      colour: "#e65722",
-      nextStatement: null,
-      tooltip: "Cập nhật thông tin từ server",
-      message0: "cập nhật thông tin từ server",
-      previousStatement: null,
-      helpUrl: "",
-    });
-  },
+Blockly.Python['era_mqtt_publish'] = function(block) {
+  Blockly.Python.definitions_['import_era_iot'] = 'from era-iot import *';
+  var message = Blockly.Python.valueToCode(block, 'MESSAGE', Blockly.Python.ORDER_ATOMIC);
+  var topic = block.getFieldValue('TOPIC');
+  // TODO: Assemble Python into code variable.
+  Blockly.Python.definitions_['import_era_iot'] = 'from era_iot import *';
+  var code = "await era_iot.virtual_write(" + topic + ", " + message + ")\n";
+  return code;
 };
 
-Blockly.Blocks["yolobit_mqtt_on_receive_message"] = {
+Blockly.Blocks["era_mqtt_on_receive_message"] = {
   init: function () {
     this.jsonInit({
-      colour: "#e65722",
-      tooltip: "Khai báo lệnh xử lý khi có thông tin từ server gửi vào một chủ đề nào đó",
-      message0: "khi nhận được %1 gửi vào chủ đề %2 %3 %4 %5",
-      previousStatement: null,
-      nextStatement: null,
+      colour: "#ff8d12",
+      tooltip: "Khai báo lệnh xử lý khi có thông tin từ server cập nhật virtual pin",
+      message0: "khi %1 nhận thông tin %2 %3",
       args0: [
         {
-          variable: "thông tin",
-          type: "field_variable",
-          name: "message",
-        },
-        {
-          type: "input_dummy",
-        },
-        {
-          type: "input_value",
+          type: "field_dropdown",
           name: "TOPIC",
+          options: virtualPins,
         },
         { type: "input_dummy" },
         { type: "input_statement", name: "ACTION" },
@@ -135,185 +191,107 @@ Blockly.Blocks["yolobit_mqtt_on_receive_message"] = {
   },
 };
 
-'use strict';
-
-// Any imports need to be reserved words
-Blockly.Python.addReservedWords('wifi');
-
-Blockly.Python['yolobit_mqtt_connect_wifi'] = function(block) {
-  Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
-  var value_wifi = Blockly.Python.valueToCode(block, 'WIFI', Blockly.Python.ORDER_ATOMIC);
-  var value_password = Blockly.Python.valueToCode(block, 'PASSWORD', Blockly.Python.ORDER_ATOMIC);
-  // TODO: Assemble Python into code variable.
-  var code = 'mqtt.connect_wifi(' + value_wifi + ', ' + value_password + ')\n';
-  return code;
-};
-
-Blockly.Python['yolobit_mqtt_connect_default_servers'] = function(block) {
-  Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
-  var value_server = block.getFieldValue('SERVER');
-  var value_username = Blockly.Python.valueToCode(block, 'USERNAME', Blockly.Python.ORDER_ATOMIC);
-  var value_key = Blockly.Python.valueToCode(block, 'KEY', Blockly.Python.ORDER_ATOMIC);
-  // TODO: Assemble Python into code variable.
-  var code = "mqtt.connect_broker(server='" + value_server + "', port=1883, username=" + value_username + ", password=" + value_key + ")\n";
-  return code;
-};
-
-Blockly.Python['yolobit_mqtt_connect_custom_servers'] = function(block) {
-  Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
-  var value_server = Blockly.Python.valueToCode(block, 'SERVER', Blockly.Python.ORDER_ATOMIC);
-  var value_port = Blockly.Python.valueToCode(block, 'PORT', Blockly.Python.ORDER_ATOMIC);
-  var value_username = Blockly.Python.valueToCode(block, 'USERNAME', Blockly.Python.ORDER_ATOMIC);
-  var value_key = Blockly.Python.valueToCode(block, 'KEY', Blockly.Python.ORDER_ATOMIC);
-  // TODO: Assemble Python into code variable.
-  var code = "mqtt.connect_broker(server=" + value_server + ", port=" + value_port + ", username=" + value_username + ", password=" + value_key + ")\n";
-  return code;
-};
-
-Blockly.Python['yolobit_mqtt_is_connected'] = function(block) {
-  Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
-  var code = 'mqtt.is_connected()';
-  return [code, Blockly.Python.ORDER_MEMBER];
-};
-Blockly.Python['yolobit_mqtt_publish'] = function(block) {
-  Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
-  var value_message = Blockly.Python.valueToCode(block, 'MESSAGE', Blockly.Python.ORDER_ATOMIC);
-  var value_topic = Blockly.Python.valueToCode(block, 'TOPIC', Blockly.Python.ORDER_ATOMIC);
-  // TODO: Assemble Python into code variable.
-  var code = 'mqtt.publish(' + value_topic + ', ' + value_message + ')\n';
-  return code;
-};
-
-Blockly.Python['yolobit_mqtt_check_message'] = function(block) {
-  Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
-  // TODO: Assemble Python into code variable.
-  var code = 'mqtt.check_message()\n';
-  return code;
-};
-
-Blockly.Python['yolobit_mqtt_on_receive_message'] = function(block) {
-  Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
-  var variable_message = Blockly.Python.variableDB_.getName(block.getFieldValue('message'), Blockly.Names.NameType?Blockly.Names.NameType.VARIABLE:Blockly.Variables.NAME_TYPE);
-  var value_topic = Blockly.Python.valueToCode(block, 'TOPIC', Blockly.Python.ORDER_ATOMIC);
+Blockly.Python['era_mqtt_on_receive_message'] = function(block) {
+  Blockly.Python.definitions_['import_era_iot'] = 'from era_iot import *';
+  var topic = block.getFieldValue('TOPIC');
   var statements_action = Blockly.Python.statementToCode(block, 'ACTION');
   // TODO: Assemble Python into code variable.
-  var globals = [];
-  var varName;
-  var workspace = block.workspace;
-  var variables = workspace.getAllVariables() || [];
-  for (var i = 0, variable; variable = variables[i]; i++) {
-    varName = variable.name;
-    if (Blockly.Python.variableDB_.getName(varName, Blockly.Names.NameType?Blockly.Names.NameType.VARIABLE:Blockly.Variables.NAME_TYPE) != variable_message) {
-      globals.push(Blockly.Python.variableDB_.getName(varName,
-        Blockly.Names.NameType?Blockly.Names.NameType.VARIABLE:Blockly.Variables.NAME_TYPE));
-    }
-  }
-  globals = globals.length ? Blockly.Python.INDENT + 'global ' + globals.join(', ') : '';
+  var globals = buildGlobalString(block);
 
   var cbFunctionName = Blockly.Python.provideFunction_(
-    'on_mqtt_message_receive_callback_' + value_topic,
-    ['def ' + Blockly.Python.FUNCTION_NAME_PLACEHOLDER_ + '(' + variable_message + '):',
+    'on_era_virtual_pin_v' + topic,
+    (globals != '')?
+    ['async def ' + Blockly.Python.FUNCTION_NAME_PLACEHOLDER_ + '(topic, value):',
       globals,
       statements_action || Blockly.Python.PASS
-    ]);
-  
-  var code = 'mqtt.on_receive_message(' + value_topic + ', ' + cbFunctionName + ')\n';
-  return code;
-};
-
-Blockly.Python['yolobit_wifi_on_receive_message_from_dashboard'] = function(block) {
-  Blockly.Python.definitions_['import_wifi'] = 'from wifi import *';
-  var variable_message = Blockly.Python.variableDB_.getName(block.getFieldValue('message'), Blockly.Names.NameType?Blockly.Names.NameType.VARIABLE:Blockly.Variables.NAME_TYPE);
-  var dropdown_channel = block.getFieldValue('CHANNEL');
-  var statements_action = Blockly.Python.statementToCode(block, 'ACTION');
-  // TODO: Assemble Python into code variable.
-  var globals = [];
-  var varName;
-  var workspace = block.workspace;
-  var variables = workspace.getAllVariables() || [];
-  for (var i = 0, variable; variable = variables[i]; i++) {
-    varName = variable.name;
-    if (Blockly.Python.variableDB_.getName(varName, Blockly.Names.NameType?Blockly.Names.NameType.VARIABLE:Blockly.Variables.NAME_TYPE) != variable_message) {
-      globals.push(Blockly.Python.variableDB_.getName(varName,
-        Blockly.Names.NameType?Blockly.Names.NameType.VARIABLE:Blockly.Variables.NAME_TYPE));
-    }
-  }
-  globals = globals.length ? Blockly.Python.INDENT + 'global ' + globals.join(', ') : '';
-
-  var cbFunctionName = Blockly.Python.provideFunction_(
-    'on_wifi_message_receive_callback_' + block.id,
-    ['def ' + Blockly.Python.FUNCTION_NAME_PLACEHOLDER_ + '(' + variable_message + '):',
-      globals,
+    ]:
+    ['async def ' + Blockly.Python.FUNCTION_NAME_PLACEHOLDER_ + '(topic, value):',
       statements_action || Blockly.Python.PASS
     ]);
 
-  var code = 'on_receive_message("' + dropdown_channel + '", ' + cbFunctionName + ')\n';
-  Blockly.Python.definitions_['on_wifi_message_receive_callback_' + block.id + '_statement'] = code;
+    Blockly.Python.definitions_['import_era_iot'] = 'from era_iot import *';
+    Blockly.Python.definitions_['task_era_virtual_pin_v' + topic] = "era_iot.on_virtual_read(" + topic + ", " + cbFunctionName + ")";
+
   return '';
 };
-Blockly.Blocks["yolobit_mqtt_check_connection"] = {
+
+Blockly.Blocks['era_mqtt_get_value'] = {
   init: function () {
     this.jsonInit(
       {
-      "type": "yolobit_mqtt_check_connection",
-      "message0": "đang kết nối wifi",
-      "output": "Boolean",
-      "colour": "#e65722",
-      "tooltip": "",
-      "helpUrl": ""
+        "message0": "giá trị nhận được",
+        "args0": [],
+        "output": null,
+        "colour": "#ff8d12",
+        "tooltip": "Đọc giá trị nhận được từ server gửi đến",
+        "helpUrl": ""
       }
     );
-}
+  }
 };
 
-Blockly.Python['yolobit_mqtt_check_connection'] = function(block) {
-  Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
+Blockly.Python['era_mqtt_get_value'] = function (block) {
   // TODO: Assemble Python into code variable.
-  var code = 'mqtt.wifi_connected()';
+  Blockly.Python.definitions_['import_era_iot'] = 'from era_iot import *';
+
+  var code = 'value';
+  // TODO: Change ORDER_NONE to the correct strength.
+  return [code, Blockly.Python.ORDER_NONE];
+};
+
+Blockly.Blocks['era_mqtt_compare_value'] = {
+  init: function () {
+    this.jsonInit(
+      {
+        "message0": "giá trị nhận được là %1 %2",
+        "args0": [
+          {
+            "type": "input_value",
+            "name": "VALUE",
+          },
+          {
+            type: "input_dummy"
+          }
+        ],
+        "output": "Boolean",
+        "colour": "#ff8d12",
+        "tooltip": "Kiểm tra xem giá trị nhận được từ server có bằng giá trị được chọn hay không",
+        "helpUrl": ""
+      }
+    );
+  }
+};
+
+Blockly.Python['era_mqtt_compare_value'] = function (block) {
+  var value = Blockly.Python.valueToCode(block, 'VALUE', Blockly.Python.ORDER_ATOMIC);
+  // TODO: Assemble Python into code variable.
+  Blockly.Python.definitions_['import_era_iot'] = 'from era_iot import *';
+  var code = 'value == ' + value;
+  // TODO: Change ORDER_NONE to the correct strength.
   return [code, Blockly.Python.ORDER_NONE];
 };
 
 
-Blockly.Blocks["yolobit_mqtt_on_receive_virtual_pin"] = {
+Blockly.Blocks['era_mqtt_get_topic'] = {
   init: function () {
-    this.jsonInit({
-      colour: "#e65722",
-      tooltip: "Khi nhận được giá trị từ chân ảo (virtual pin)",
-      message0: "khi nhận được chân ảo V%1 gán vào %2 %3 %4",
-      args0: [
-        {
-          type: "field_number",
-          name: "VPIN",
-          value: 1,
-          min: 0,
-          precision: 1
-        },
-        {
-          type: "field_variable",
-          name: "message",
-          variable: "giá trị"
-        },
-        { type: "input_dummy" },
-        { type: "input_statement", name: "ACTION" },
-      ],
-      previousStatement: null,
-      nextStatement: null,
-      helpUrl: "",
-    });
-  },
+    this.jsonInit(
+      {
+        "message0": "topic nhận được",
+        "args0": [],
+        "output": null,
+        "colour": "#ff8d12",
+        "tooltip": "Đọc topic nhận được từ server gửi đến",
+        "helpUrl": ""
+      }
+    );
+  }
 };
-Blockly.Python['yolobit_mqtt_on_receive_virtual_pin'] = function(block) {
-  Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
-  var vpin = block.getFieldValue('VPIN');
-  var variable_message = Blockly.Python.variableDB_.getName(block.getFieldValue('message'), Blockly.Variables.NAME_TYPE);
-  var statements_action = Blockly.Python.statementToCode(block, 'ACTION');
 
-  var cbFunctionName = Blockly.Python.provideFunction_(
-    'on_virtual_pin_' + vpin,
-    ['def ' + Blockly.Python.FUNCTION_NAME_PLACEHOLDER_ + '(' + variable_message + '):',
-     statements_action || Blockly.Python.PASS
-    ]);
+Blockly.Python['era_mqtt_get_topic'] = function (block) {
+  // TODO: Assemble Python into code variable.
+  Blockly.Python.definitions_['import_era_iot'] = 'from era_iot import *';
 
-  var code = 'mqtt.on_receive_message("V' + vpin + '", ' + cbFunctionName + ')\n';
-  return code;
+  var code = 'topic';
+  // TODO: Change ORDER_NONE to the correct strength.
+  return [code, Blockly.Python.ORDER_NONE];
 };

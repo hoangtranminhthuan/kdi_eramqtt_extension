@@ -1,2 +1,2 @@
-# yolobit_extension_mqtt
-Extension for YoloBit to work with IoT MQTT protocol
+# yolouno_extension_era_iot
+Block extention for Yolo UNO to work with Era IoT Platform

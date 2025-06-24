@@ -1,10 +1,8 @@
 {
-    "name": "MQTT",
-    "description": "Mục mở rộng hỗ trợ giao tiếp MQTT cho ứng dụng IoT",
+    "name": "ERA IoT",
+    "description": "Block extension for Yolo UNO to work with Era IoT platform",
     "libs": [
-        "umqtt_robust.py",
-        "umqtt_simple.py",
-        "mqtt.py"
+        "era_iot.py"
     ],
     "blocks": [
         "definition.js"
