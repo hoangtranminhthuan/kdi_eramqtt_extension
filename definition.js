@@ -272,3 +272,48 @@ Blockly.Python['yolobit_mqtt_check_connection'] = function(block) {
   var code = 'mqtt.wifi_connected()';
   return [code, Blockly.Python.ORDER_NONE];
 };
+
+
+Blockly.Blocks["yolobit_mqtt_on_receive_virtual_pin"] = {
+  init: function () {
+    this.jsonInit({
+      colour: "#e65722",
+      tooltip: "Khi nhận được giá trị từ chân ảo (virtual pin)",
+      message0: "khi nhận được chân ảo V%1 gán vào %2 %3 %4",
+      args0: [
+        {
+          type: "field_number",
+          name: "VPIN",
+          value: 1,
+          min: 0,
+          precision: 1
+        },
+        {
+          type: "field_variable",
+          name: "message",
+          variable: "giá trị"
+        },
+        { type: "input_dummy" },
+        { type: "input_statement", name: "ACTION" },
+      ],
+      previousStatement: null,
+      nextStatement: null,
+      helpUrl: "",
+    });
+  },
+};
+Blockly.Python['yolobit_mqtt_on_receive_virtual_pin'] = function(block) {
+  Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
+  var vpin = block.getFieldValue('VPIN');
+  var variable_message = Blockly.Python.variableDB_.getName(block.getFieldValue('message'), Blockly.Variables.NAME_TYPE);
+  var statements_action = Blockly.Python.statementToCode(block, 'ACTION');
+
+  var cbFunctionName = Blockly.Python.provideFunction_(
+    'on_virtual_pin_' + vpin,
+    ['def ' + Blockly.Python.FUNCTION_NAME_PLACEHOLDER_ + '(' + variable_message + '):',
+     statements_action || Blockly.Python.PASS
+    ]);
+
+  var code = 'mqtt.on_receive_message("V' + vpin + '", ' + cbFunctionName + ')\n';
+  return code;
+};

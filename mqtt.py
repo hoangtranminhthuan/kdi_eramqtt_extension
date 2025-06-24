@@ -99,7 +99,7 @@ class MQTT:
         self.server = server
         self.username = username
         self.password = password
-        if server.lower() == 'mqtt1.eoh.io' or server.lower() == 'mqtt1.eoh.io':
+        if server.lower() == 'mqtt.ohstem.vn' or server.lower() == 'mqtt1.eoh.io':
             self.token = username
             self.topic_prefix = 'eoh/chip/{}/'.format(self.token)
         else:
@@ -146,7 +146,7 @@ mqtt = MQTT()
 def unit_test():    
     import time
     mqtt.connect_wifi('wifi', 'password')
-    mqtt.connect_broker(server='mqtt1.eoh.io', port=1883, username='test', password='')
+    mqtt.connect_broker(server='mqtt.ohstem.vn', port=1883, username='test', password='')
     mqtt.publish('V1', 'Hello')
 
     def process(msg):

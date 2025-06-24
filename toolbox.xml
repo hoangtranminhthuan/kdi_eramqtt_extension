@@ -67,5 +67,10 @@
         </shadow>
       </value>
     </block>
+    <block type="yolobit_mqtt_on_receive_virtual_pin">
+      <field name="VPIN">1</field>
+      <field name="message">giá trị</field>
+    </block>
+
   </category>
 </xml>
