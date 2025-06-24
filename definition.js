@@ -119,17 +119,23 @@ Blockly.Blocks["era_mqtt_connect"] = {
 };
 
 Blockly.Python['era_mqtt_connect'] = function(block) {
-  var wifi = block.getFieldValue('WIFI');
+  var wifi     = block.getFieldValue('WIFI');
   var password = block.getFieldValue('PASSWORD');
-  var token = block.getFieldValue('TOKEN');
+  var token    = block.getFieldValue('TOKEN');
 
-  Blockly.Python.definitions_['import_era_iot'] = 'from era_iot import *';
-  Blockly.Python.definitions_['init_era_mqtt'] = "era_iot = EraIoT('" + wifi + "', '" + password + "', '" + token + "')\n";
-  
-  // TODO: Assemble Python into code variable.
+  // 1) import class
+  Blockly.Python.definitions_['era_import_class'] =
+    'from era_iot import EraIoT';
+
+  // 2) khởi tạo global instance ngay đầu file
+  Blockly.Python.definitions_['era_init_instance'] =
+    "era_iot = EraIoT('" + wifi + "', '" + password + "', '" + token + "')";
+
+  // 3) code chính đưa vào khối lệnh
   var code = "era_iot.connect()\n";
   return code;
 };
+
 
 Blockly.Blocks["era_mqtt_publish"] = {
   init: function () {
@@ -192,8 +198,7 @@ Blockly.Blocks["era_mqtt_on_receive_message"] = {
 };
 
 Blockly.Python['era_mqtt_on_receive_message'] = function(block) {
-  Blockly.Python.definitions_['import_era_iot'] = 'from era_iot import *';
-  var topic = block.getFieldValue('TOPIC');
+  Blockly.Python.definitions_['import_era_iot'] = 'from era_iot import *';  var topic = block.getFieldValue('TOPIC');
   var statements_action = Blockly.Python.statementToCode(block, 'ACTION');
   // TODO: Assemble Python into code variable.
   var globals = buildGlobalString(block);
@@ -208,8 +213,6 @@ Blockly.Python['era_mqtt_on_receive_message'] = function(block) {
     ['async def ' + Blockly.Python.FUNCTION_NAME_PLACEHOLDER_ + '(topic, value):',
       statements_action || Blockly.Python.PASS
     ]);
-
-    Blockly.Python.definitions_['import_era_iot'] = 'from era_iot import *';
     Blockly.Python.definitions_['task_era_virtual_pin_v' + topic] = "era_iot.on_virtual_read(" + topic + ", " + cbFunctionName + ")";
 
   return '';
