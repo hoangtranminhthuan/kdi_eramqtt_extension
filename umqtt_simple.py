@@ -62,34 +62,33 @@ class MQTTClient:
     self.lw_retain = retain
 
   def connect(self, clean_session=True):
-    # Tạo socket và kết nối tới broker
+    import socket
+    from umqtt_simple import MQTTException
+
+    # Tạo socket, bật timeout
     self.sock = socket.socket()
+    self.sock.settimeout(5)                  # chờ tối đa 5 giây
     self.sock.connect(self.addr)
     if self.ssl:
         import ussl
         self.sock = ussl.wrap_socket(self.sock, **self.ssl_params)
 
-    # Xây dựng packet CONNECT
+    # Build CONNECT packet...
     msg = bytearray(b"\x10\0\0\x04MQTT\x04\x02\0\0")
-    # remaining length = 10 (fixed) + client_id + (user/pass nếu có)
     msg[1] = 10 + 2 + len(self.client_id)
     msg[9] = clean_session << 1
-    # thêm user/pass
     if self.user is not None:
         msg[1] += 2 + len(self.user) + 2 + len(self.pswd)
-        msg[9] |= 0xC0  # bit7+6: username/password flags
-    # keepalive
+        msg[9] |= 0xC0
     if self.keepalive:
         assert self.keepalive < 65536
         msg[10] |= self.keepalive >> 8
         msg[11] |= self.keepalive & 0xFF
-    # last will
     if self.lw_topic:
         msg[1] += 2 + len(self.lw_topic) + 2 + len(self.lw_msg)
         msg[9] |= 0x04 | ((self.lw_qos & 1) << 3) | ((self.lw_qos & 2) << 3)
         msg[9] |= self.lw_retain << 5
 
-    # Gửi packet CONNECT
     self.sock.write(msg)
     self._send_str(self.client_id)
     if self.lw_topic:
@@ -99,34 +98,29 @@ class MQTTClient:
         self._send_str(self.user)
         self._send_str(self.pswd)
 
-    # Hàm con để đọc đúng n byte
+    # Helper: đọc đúng n byte bằng recv()
     def _read_exact(n):
         buf = b''
         while len(buf) < n:
-            chunk = self.sock.read(n - len(buf))
+            try:
+                chunk = self.sock.recv(n - len(buf))
+            except OSError as e:
+                raise MQTTException("Socket recv error: %s" % e)
             if not chunk:
                 raise MQTTException("CONNECT failed: incomplete CONNACK")
+            # debug: in ra độ dài chunk
+            print("recv chunk len:", len(chunk))
             buf += chunk
         return buf
 
-    # Đọc 4 byte CONNACK
     resp = _read_exact(4)
-    # Kiểm tra packet type và remaining length
+    print("CONNACK raw:", resp)
     if not (resp[0] == 0x20 and resp[1] == 0x02):
         raise MQTTException("Bad CONNACK header: %r" % resp)
-    # Mã trả về của broker (0 = success)
     if resp[3] != 0:
         raise MQTTException("CONNACK return code %d" % resp[3])
-    # Trả về flag Session Present (bit0 của byte 2)
     return resp[2] & 1
 
-
-    resp = _read_exact(4)
-    # Kiểm tra header CONNACK (0x20, remaining=2)
-    assert resp[0] == 0x20 and resp[1] == 0x02, "Bad CONNACK header"
-    if resp[3] != 0:
-      raise MQTTException(resp[3])
-    return resp[2] & 1
 
   def disconnect(self):
     self.sock.write(b"\xe0\0")
