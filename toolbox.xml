@@ -1,29 +1,71 @@
 <xml xmlns="https://developers.google.com/blockly/xml" id="toolbox" style="display: none">
-  <category id="era-iot" name="ERA IOT" colour="#ff8d12" icon="wifi">
-    <block type="era_mqtt_connect" />
-    <block type="era_mqtt_publish">
-      <value name="MESSAGE">
+  <category id="mqtt" name="MQTT" colour="#e65722" icon="wifi">
+    <block type="yolobit_mqtt_connect_wifi">
+      <value name="WIFI">
         <shadow type="text">
-          <field name="TEXT">1</field>
+          <field name="TEXT">wifi</field>
+        </shadow>
+      </value>
+      <value name="PASSWORD">
+        <shadow type="text">
+          <field name="TEXT">password</field>
         </shadow>
       </value>
     </block>
-    <block type="era_mqtt_on_receive_message" />
-    <block type="era_mqtt_compare_value" >
-      <value name="VALUE">
+    <block type="yolobit_mqtt_connect_default_servers">
+      <value name="USERNAME">
+        <shadow type="text">
+          <field name="TEXT"></field>
+        </shadow>
+      </value>
+      <value name="KEY">
+        <shadow type="text">
+          <field name="TEXT"></field>
+        </shadow>
+      </value>
+    </block>
+    <block type="yolobit_mqtt_connect_custom_servers">
+      <value name="SERVER">
+        <shadow type="text">
+          <field name="TEXT"></field>
+        </shadow>
+      </value>
+      <value name="PORT">
+        <shadow type="math_number">
+          <field name="NUM">1883</field>
+        </shadow>
+      </value>
+      <value name="USERNAME">
+        <shadow type="text">
+          <field name="TEXT"></field>
+        </shadow>
+      </value>
+      <value name="KEY">
+        <shadow type="text">
+          <field name="TEXT"></field>
+        </shadow>
+      </value>
+    </block>
+    <block type="yolobit_mqtt_publish">
+      <value name="MESSAGE">
         <shadow type="text">
           <field name="TEXT">Hello</field>
         </shadow>
       </value>
-    </block>
-    <block type="era_mqtt_compare_value" >
-      <value name="VALUE">
-        <shadow type="math_number">
-          <field name="NUM">1</field>
+      <value name="TOPIC">
+        <shadow type="text">
+          <field name="TEXT">topic</field>
         </shadow>
       </value>
     </block>
-    <block type="era_mqtt_get_value" />
-    <block type="era_mqtt_get_topic" />
+    <block type="yolobit_mqtt_check_connection"/>
+    <block type="yolobit_mqtt_check_message" />
+    <block type="yolobit_mqtt_on_receive_message">
+      <value name="TOPIC">
+        <shadow type="text">
+          <field name="TEXT">topic</field>
+        </shadow>
+      </value>
+    </block>
   </category>
 </xml>

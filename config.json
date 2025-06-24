@@ -1,12 +1,11 @@
 {
-    "name": "ERA IoT",
-    "description": "Block extension for Yolo UNO to work with Era IoT platform. Dev by KDI EDUCATIONv3.3.2",
+    "name": "MQTT",
+    "description": "Mục mở rộng hỗ trợ giao tiếp MQTT cho ứng dụng IoT",
     "libs": [
-        "umqtt_simple.py",
         "umqtt_robust.py",
-        "era_iot.py"
+        "umqtt_simple.py",
+        "mqtt.py"
     ],
-
     "blocks": [
         "definition.js"
     ],
