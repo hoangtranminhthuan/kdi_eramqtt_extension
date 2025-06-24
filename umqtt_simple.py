@@ -90,8 +90,19 @@ class MQTTClient:
     if self.user is not None:
       self._send_str(self.user)
       self._send_str(self.pswd)
-    resp = self.sock.read(4)
-    assert resp[0] == 0x20 and resp[1] == 0x02
+    # Đọc chính xác N byte (blocking cho tới khi đủ)
+    def _read_exact(n):
+        buf = b''
+        while len(buf) < n:
+            chunk = self.sock.read(n - len(buf))
+            if not chunk:
+                raise MQTTException("CONNECT failed: incomplete CONNACK")
+            buf += chunk
+        return buf
+
+    resp = _read_exact(4)
+    # Kiểm tra header CONNACK (0x20, remaining=2)
+    assert resp[0] == 0x20 and resp[1] == 0x02, "Bad CONNACK header"
     if resp[3] != 0:
       raise MQTTException(resp[3])
     return resp[2] & 1
