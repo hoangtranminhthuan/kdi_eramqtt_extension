@@ -2,7 +2,7 @@
     "name": "ERA IoT",
     "description": "Block extension for Yolo UNO to work with Era IoT platform",
     "libs": [
-        "era_iot.py", "mqtt_as.py", "mqtt_sr.py", "micropython.py"
+        "era_iot.py", "mqtt_as1.py", "mqtt_sr.py", "micropython.py"
     ],
     "blocks": [
         "definition.js"
