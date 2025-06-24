@@ -127,7 +127,7 @@ Blockly.Python['era_mqtt_connect'] = function(block) {
   Blockly.Python.definitions_['init_era_mqtt'] = "era_iot = EraIoT('" + wifi + "', '" + password + "', '" + token + "')\n";
   
   // TODO: Assemble Python into code variable.
-  var code = "await era_iot.connect()\n";
+  var code = "era_iot.connect()\n";
   return code;
 };
 
