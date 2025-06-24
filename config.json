@@ -1,5 +1,5 @@
 {
-    "name": "ERA IoT",
+    "name": "ERA IoT by KDI EDUCATION",
     "description": "Block extension for Yolo UNO to work with Era IoT platform",
     "libs": [
         "era_iot.py"
