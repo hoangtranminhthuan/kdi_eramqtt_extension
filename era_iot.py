@@ -20,73 +20,73 @@ ERA_PUB_PREFIX_MULTI_CONFIG_DATA_TOPIC              = '/config_value'
 ERA_MQTT_SERVER                                     = 'mqtt1.eoh.io'
 ERA_MQTT_PORT                                       = 1883
 
-class EraIoT:
-    def __init__(self, ssid, password, token):
-        self._virtual_pins = {}
-        self._token = token
-        self._config = config.copy()
-        self._config['ssid'] = ssid
-        self._config['wifi_pw'] = password
-        self._config['server'] = ERA_MQTT_SERVER
-        self._config['port'] = ERA_MQTT_PORT
-        
-        self._config['user'] = self._token
-        self._config['password'] = self._token
-        self._config["will"] = [self._get_topic(ERA_PREFIX_LWT_TOPIC), ERA_OFFLINE_MESSAGE, True, 1]
-        
-        self._config['topics'] = []
-        self._config["topics"].append((self._get_topic(ERA_SUB_PREFIX_DOWN_TOPIC), self._on_config_down_message))
-        self._config["topics"].append((self._get_topic(ERA_SUB_PREFIX_VIRTUAL_TOPIC), self._on_virtual_pin_message))
-        
 
-        MQTTClient.DEBUG = True  # Optional: print diagnostic messages
+def __init__(self, ssid, password, token):
+    self._virtual_pins = {}
+    self._token = token
+    self._config = config.copy()
+    self._config['ssid'] = ssid
+    self._config['wifi_pw'] = password
+    self._config['server'] = ERA_MQTT_SERVER
+    self._config['port'] = ERA_MQTT_PORT
     
-    async def connect(self):
-        self._client = MQTTClient(self._config)
-        await self._client.connect()
-        # get config
-        await self._client.publish(self._get_topic(ERA_PREFIX_LWT_TOPIC), ERA_ONLINE_MESSAGE % self._config['ssid'], retain=True, qos=1)
+    self._config['user'] = self._token
+    self._config['password'] = self._token
+    self._config["will"] = [self._get_topic(ERA_PREFIX_LWT_TOPIC), ERA_OFFLINE_MESSAGE, True, 1]
     
-    def _get_topic(self, topic):
-        return ERA_BASE_TOPIC % self._token + topic
+    self._config['topics'] = []
+    self._config["topics"].append((self._get_topic(ERA_SUB_PREFIX_DOWN_TOPIC), self._on_config_down_message))
+    self._config["topics"].append((self._get_topic(ERA_SUB_PREFIX_VIRTUAL_TOPIC), self._on_virtual_pin_message))
+    
 
-    async def _on_config_down_message(self, topic, payload):
-        payload = ujson.loads(payload)
-        devices = payload['configuration']['arduino_pin']['devices']
-        #print(devices)
-        # save config id from server
-        if len(devices):
-            for d in devices:
-                v_pins = d['virtual_pins']
-                if len(v_pins):
-                    for v in v_pins:
-                        self._virtual_pins[int(v['pin_number'])] = v['config_id']
-        #print(self._virtual_pins)
-    
-    async def _on_virtual_pin_message(self, topic, payload):
-        payload = ujson.loads(payload)
-        value = int(payload['value'])
-        # split topic to get virtual pin
-        pin = match_mqtt_topic(topic, self._get_topic(ERA_SUB_PREFIX_VIRTUAL_TOPIC))
+    MQTTClient.DEBUG = True  # Optional: print diagnostic messages
 
-        if pin != None and len(pin) == 1:
-            pin = int(pin[0])
-        else:
-            return
-        #print('Receive virtual pin command: V', pin, '=', value)
+def connect(self):
+    self._client = MQTTClient(self._config)
+    self._client.connect()
+    # get config
+    self._client.publish(self._get_topic(ERA_PREFIX_LWT_TOPIC), ERA_ONLINE_MESSAGE % self._config['ssid'], retain=True, qos=1)
 
-        if self._virtual_pins[str(pin) + '_cb']:
-            await self._virtual_pins[str(pin) + '_cb'](topic, value)
-    
-    async def virtual_write(self, pin, value, qos=1):
-        config_id = self._virtual_pins.get(int(pin))
-        if config_id == None:
-           return
-        topic = self._get_topic(ERA_PUB_PREFIX_CONFIG_DATA_TOPIC % config_id)
-        await self._client.publish(topic, ERA_PUBLISH_MESSAGE % value, retain=True, qos=qos)
-    
-    def on_virtual_read(self, pin, callback):
-        self._virtual_pins[str(pin) + '_cb'] = callback
+def _get_topic(self, topic):
+    return ERA_BASE_TOPIC % self._token + topic
+
+def _on_config_down_message(self, topic, payload):
+    payload = ujson.loads(payload)
+    devices = payload['configuration']['arduino_pin']['devices']
+    #print(devices)
+    # save config id from server
+    if len(devices):
+        for d in devices:
+            v_pins = d['virtual_pins']
+            if len(v_pins):
+                for v in v_pins:
+                    self._virtual_pins[int(v['pin_number'])] = v['config_id']
+    #print(self._virtual_pins)
+
+def _on_virtual_pin_message(self, topic, payload):
+    payload = ujson.loads(payload)
+    value = int(payload['value'])
+    # split topic to get virtual pin
+    pin = match_mqtt_topic(topic, self._get_topic(ERA_SUB_PREFIX_VIRTUAL_TOPIC))
+
+    if pin != None and len(pin) == 1:
+        pin = int(pin[0])
+    else:
+        return
+    #print('Receive virtual pin command: V', pin, '=', value)
+
+    if self._virtual_pins[str(pin) + '_cb']:
+        self._virtual_pins[str(pin) + '_cb'](topic, value)
+
+def virtual_write(self, pin, value, qos=1):
+    config_id = self._virtual_pins.get(int(pin))
+    if config_id == None:
+        return
+    topic = self._get_topic(ERA_PUB_PREFIX_CONFIG_DATA_TOPIC % config_id)
+    self._client.publish(topic, ERA_PUBLISH_MESSAGE % value, retain=True, qos=qos)
+
+def on_virtual_read(self, pin, callback):
+    self._virtual_pins[str(pin) + '_cb'] = callback
 
     
 # Example usage
