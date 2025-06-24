@@ -162,11 +162,11 @@ Blockly.Blocks["era_mqtt_publish"] = {
 };
 
 Blockly.Python['era_mqtt_publish'] = function(block) {
-  Blockly.Python.definitions_['import_era_iot'] = 'from era-iot import *';
+  Blockly.Python.definitions_['import_era_iot'] = 'from era_iot import *';
   var message = Blockly.Python.valueToCode(block, 'MESSAGE', Blockly.Python.ORDER_ATOMIC);
   var topic = block.getFieldValue('TOPIC');
   // TODO: Assemble Python into code variable.
-  Blockly.Python.definitions_['import_era_iot'] = 'from era_iot import *';
+  
   var code = "await era_iot.virtual_write(" + topic + ", " + message + ")\n";
   return code;
 };
@@ -209,7 +209,7 @@ Blockly.Python['era_mqtt_on_receive_message'] = function(block) {
       statements_action || Blockly.Python.PASS
     ]);
 
-    Blockly.Python.definitions_['import_era_iot'] = 'from era_iot import *';
+   
     Blockly.Python.definitions_['task_era_virtual_pin_v' + topic] = "era_iot.on_virtual_read(" + topic + ", " + cbFunctionName + ")";
 
   return '';
