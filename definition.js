@@ -123,11 +123,11 @@ Blockly.Python['era_mqtt_connect'] = function(block) {
   var password = block.getFieldValue('PASSWORD');
   var token = block.getFieldValue('TOKEN');
 
-  Blockly.Python.definitions_['import_era_iot'] = 'from era_iot import *\n' + 'from mqtt_as import MQTTClient, config, match_mqtt_topic';
+  Blockly.Python.definitions_['import_era_iot'] = 'from era_iot import *';
   Blockly.Python.definitions_['init_era_mqtt'] = "era_iot = EraIoT('" + wifi + "', '" + password + "', '" + token + "')\n";
   
-  // TODO: Assemble Python into code variable. 
-  var code = "era_iot.connect()\n";
+  // TODO: Assemble Python into code variable.
+  var code = "await era_iot.connect()\n";
   return code;
 };
 
@@ -167,7 +167,7 @@ Blockly.Python['era_mqtt_publish'] = function(block) {
   var topic = block.getFieldValue('TOPIC');
   // TODO: Assemble Python into code variable.
   Blockly.Python.definitions_['import_era_iot'] = 'from era_iot import *';
-  var code = "era_iot.virtual_write(" + topic + ", " + message + ")\n";
+  var code = "await era_iot.virtual_write(" + topic + ", " + message + ")\n";
   return code;
 };
 
