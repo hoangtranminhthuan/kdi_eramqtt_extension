@@ -273,33 +273,33 @@ Blockly.Python['yolobit_mqtt_check_connection'] = function(block) {
 
 
 
-// --- thêm vào dưới cùng file definition.js ---
-Blockly.Blocks['yolobit_mqtt_publish_value'] = {
-  init: function() {
-    this.appendValueInput("VALUE")
-        .setCheck(null)
-        .appendField("gửi giá trị");
-    this.appendDummyInput()
-        .appendField("lên V")
-        .appendField(new Blockly.FieldDropdown([
-          ["V0","0"],["V1","1"],["V2","2"],["V3","3"],
-          ["V4","4"],["V5","5"],["V6","6"],["V7","7"],
-          ["V8","8"],["V9","9"]
-        ]), "PIN");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(230);
-    this.setTooltip("Gửi giá trị lên virtual pin");
-    this.setHelpUrl("");
-  }
-};
+// // --- thêm vào dưới cùng file definition.js ---
+// Blockly.Blocks['yolobit_mqtt_publish_value'] = {
+//   init: function() {
+//     this.appendValueInput("VALUE")
+//         .setCheck(null)
+//         .appendField("gửi giá trị");
+//     this.appendDummyInput()
+//         .appendField("lên V")
+//         .appendField(new Blockly.FieldDropdown([
+//           ["V0","0"],["V1","1"],["V2","2"],["V3","3"],
+//           ["V4","4"],["V5","5"],["V6","6"],["V7","7"],
+//           ["V8","8"],["V9","9"]
+//         ]), "PIN");
+//     this.setPreviousStatement(true);
+//     this.setNextStatement(true);
+//     this.setColour(230);
+//     this.setTooltip("Gửi giá trị lên virtual pin");
+//     this.setHelpUrl("");
+//   }
+// };
 
 
-Blockly.MicroPython['yolobit_mqtt_publish_value'] = function(block) {
-  var value = Blockly.MicroPython.valueToCode(block, 'VALUE', 
-               Blockly.MicroPython.ORDER_NONE) || '0';
-  var pin   = block.getFieldValue('PIN');
-  // giả sử bạn tạo mqtt object tên mqtt trong global
-  var code  = `mqtt.publish('V${pin}', ${value})\n`;
-  return code;
-};
+// Blockly.MicroPython['yolobit_mqtt_publish_value'] = function(block) {
+//   var value = Blockly.MicroPython.valueToCode(block, 'VALUE', 
+//                Blockly.MicroPython.ORDER_NONE) || '0';
+//   var pin   = block.getFieldValue('PIN');
+//   // giả sử bạn tạo mqtt object tên mqtt trong global
+//   var code  = `mqtt.publish('V${pin}', ${value})\n`;
+//   return code;
+// };
