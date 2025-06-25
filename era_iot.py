@@ -143,6 +143,8 @@ ERA IoT MQTT helper – built specifically for mqtt1.eoh.io
 from umqtt_robust import MQTTClient
 import network, time, ujson, ubinascii, machine
 
+era = None  # global instance
+
 class EraMQTT:
     def __init__(self, token, ssid, password, *, client_id=None, debug=True):
         self.token = token
@@ -232,3 +234,36 @@ class EraMQTT:
                 self.client.check_msg()
             except Exception as e:
                 self._log(f'Loop error: {e}')
+
+
+def connect_wifi(ssid, wifi_pw, token, client_id=None):
+    global era
+    era = EraMQTT(token, ssid, wifi_pw, client_id=client_id)
+    era.connect_wifi()
+    era.connect_mqtt()
+    return True
+
+def publish_virtual_pin(pin, value):
+    if era:
+        era.virtual_write(pin, value)
+
+def on_virtual_pin_change(pin, callback):
+    if era:
+        era.on_virtual_pin(pin, callback)
+
+def check_message():
+    if era:
+        era.loop()
+
+def wifi_connected():
+    return network.WLAN(network.STA_IF).isconnected()
+
+def is_connected():
+    return era is not None and era.client is not None and wifi_connected()
+
+def debug_status():
+    if era:
+        print("Wi-Fi:", "ON" if wifi_connected() else "OFF")
+        print("MQTT:", "ON" if era.client else "OFF")
+    else:
+        print("EraMQTT not initialized")
