@@ -423,114 +423,109 @@
 # test_connection()
 
 """
-Era IoT helper for MicroPython – fixed version (compat 🛠️)
------------------------------------------------------------
-*  Short or fixed `client_id` (≤23 chars)
-*  Clean debug logging
-*  Works with *all* MicroPython `umqtt_robust` versions
+Era IoT helper for MicroPython – auto‑fallback TLS
+--------------------------------------------------
+*  Auto‑trimmed `client_id` (≤ 23 chars) – conforms to MQTT 3.1
+*  First try plain 1883, if broker closes → retry TLS 8883
+*  Works with stock `umqtt_robust` & MicroPython 1.23 on ESP32‑S3
 """
 
 from umqtt_robust import MQTTClient
-import network, ujson, time, ubinascii, machine
+import network, ujson, time, ubinascii, machine, ussl
 
 __all__ = [
-    "EraIoT", "connect_wifi", "publish", "publish_virtual_pin",
+    "EraIoT", "connect_wifi", "publish_virtual_pin", "publish",
     "on_receive_message", "on_virtual_pin_change", "check_message",
     "wifi_connected", "is_connected", "debug_status",
 ]
 
 
 class EraIoT:
-    """High-level helper for Era IoT MQTT cloud."""
+    """High‑level helper for Era IoT cloud (mqtt1.eoh.io)."""
 
-    def __init__(
-        self,
-        wifi_ssid: str,
-        wifi_password: str,
-        era_token: str,
-        *,
-        client_id: str | None = None,
-        keepalive: int = 60,
-        debug: bool = True,
-    ) -> None:
-        self._ssid = wifi_ssid
-        self._pw = wifi_password
-        self._token = era_token  # also used for MQTT user/pass
-        self._fixed_cid = client_id  # may be None –> auto
+    def __init__(self, ssid, password, token, *, client_id=None, keepalive=60, debug=True):
+        self._ssid = ssid
+        self._pw = password
+        self._token = token
+        self._fixed_cid = client_id
         self._keepalive = keepalive
-        self._debug = debug
+        self._dbg = debug
+        self._client = None
+        self._cbs = {}
+        self._log("init – SSID=%s | CID=%s" % (ssid, client_id or "<auto>"))
 
-        self._client: MQTTClient | None = None
-        self._cbs: dict[str, callable] = {}
-
-        self._log("EraIoT init – SSID=%s | CID=%s" % (wifi_ssid, (client_id or "<auto>")[:23]))
-
-    # ------------------------------------------------------------------
-    def _log(self, msg: str) -> None:
-        if self._debug:
+    # -----------------------------------------------------------------
+    def _log(self, msg):
+        if self._dbg:
             print("[ERA]", msg)
 
-    # Wi‑Fi -------------------------------------------------------------
-    def _ensure_wifi(self, timeout: int = 30) -> None:
+    # Wi‑Fi ------------------------------------------------------------
+    def _ensure_wifi(self, tout=30):
         wlan = network.WLAN(network.STA_IF)
         wlan.active(True)
         if wlan.isconnected():
-            self._log("Wi‑Fi already connected")
             return
         self._log(f"Connecting Wi‑Fi → {self._ssid}")
         wlan.connect(self._ssid, self._pw)
         tic = time.time()
         while not wlan.isconnected():
-            if time.time() - tic > timeout:
+            if time.time() - tic > tout:
                 raise OSError("Wi‑Fi timeout")
-            time.sleep(0.5)
             print(".", end="")
+            time.sleep(0.5)
         print()
         self._log("Wi‑Fi OK – IP %s" % wlan.ifconfig()[0])
 
-    # MQTT --------------------------------------------------------------
-    def _auto_client_id(self) -> bytes:
+    # MQTT -------------------------------------------------------------
+    def _auto_cid(self):
         if self._fixed_cid:
             return self._fixed_cid.encode()
-        suffix = ubinascii.hexlify(machine.unique_id()).decode()[:4]
+        suf = ubinascii.hexlify(machine.unique_id()).decode()[:4]
         base = self._token.replace("-", "")[:19]
-        return f"{base}{suffix}".encode()
+        return (base + suf).encode()
 
-    def _topic(self, suffix: str) -> str:
-        return f"eoh/chip/{self._token}{suffix}"
+    def _topic(self, suf):
+        return f"eoh/chip/{self._token}{suf}"
 
-    def connect(self, host: str = "mqtt1.eoh.io", port: int = 1883, ssl: bool = False):
-        self._ensure_wifi()
-        cid = self._auto_client_id()
-        self._log(f"MQTT connect → {host}:{port} CID={cid.decode()}")
-
-        # some umqtt builds don't accept clean_session kwarg → omit for compat
-        self._client = MQTTClient(
-            client_id=cid,
+    def _mk_client(self, host, port, ssl_flag):
+        return MQTTClient(
+            client_id=self._auto_cid(),
             server=host,
             port=port,
             user=self._token.encode(),
             password=self._token.encode(),
             keepalive=self._keepalive,
-            ssl=ssl,
+            ssl=ssl_flag,
         )
 
-        # last‑will & callback
-        self._client.set_last_will(self._topic("/is_online"), b"{\"ol\":0}", retain=True)
-        self._client.set_callback(self._on_message)
-        self._client.connect()
+    def connect(self):
+        self._ensure_wifi()
+        for host, port, use_ssl in (("mqtt1.eoh.io", 1883, False), ("mqtt1.eoh.io", 8883, True)):
+            try:
+                cid = self._auto_cid().decode()
+                proto = "TLS" if use_ssl else "plain"
+                self._log(f"MQTT {proto} connect → {host}:{port} CID={cid}")
+                self._client = self._mk_client(host, port, use_ssl)
+                self._client.set_last_will(self._topic("/is_online"), b"{\"ol\":0}", retain=True)
+                self._client.set_callback(self._on_msg)
+                self._client.connect()
+                break  # success
+            except (OSError, IndexError):
+                self._log("connect failed – trying fallback…")
+                self._client = None
+        if not self._client:
+            raise OSError("Unable to connect MQTT (plain & TLS failed)")
 
+        # subs & announce
         self._client.subscribe(self._topic("/down"))
         self._client.subscribe(self._topic("/virtual_pin/#"))
-
         self.publish(self._topic("/is_online"), ujson.dumps({"ol": 1}), retain=True)
-        self._log("MQTT connected & online flag sent")
+        self._log("MQTT connected & online")
 
-    # ------------------------------------------------------------------
-    def publish(self, topic: str, msg, *, retain: bool = False):
+    # -----------------------------------------------------------------
+    def publish(self, topic, msg, retain=False):
         if not self._client:
             raise RuntimeError("MQTT not connected")
-        self._log(f"PUB {topic} ← {msg}")
         self._client.publish(topic, msg if isinstance(msg, bytes) else str(msg), retain=retain)
 
     def virtual_write(self, pin, value):
@@ -538,70 +533,52 @@ class EraIoT:
 
     publish_virtual_pin = virtual_write
 
-    # ------------------------------------------------------------------
-    def on_receive_message(self, topic_or_pin: str, cb):
-        self._cbs[topic_or_pin] = cb
-        self._log(f"callback registered → {topic_or_pin}")
+    # -----------------------------------------------------------------
+    def on_receive_message(self, key, cb):
+        self._cbs[str(key)] = cb
 
-    def _on_message(self, t_b: bytes, p_b: bytes):
+    def _on_msg(self, t_b, p_b):
         topic, payload = t_b.decode(), p_b.decode()
-        self._log(f"RX {topic} → {payload}")
         if topic in self._cbs:
             self._cbs[topic](payload)
             return
         vbase = self._topic("/virtual_pin/")
         if topic.startswith(vbase):
             pin = topic[len(vbase):]
-            cb = self._cbs.get(pin)
-            if cb:
+            if pin in self._cbs:
                 try:
                     val = ujson.loads(payload).get("value", payload)
                 except ValueError:
                     val = payload
-                cb(pin, val)
+                self._cbs[pin](pin, val)
 
-    # ------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def loop(self):
         if self._client:
             try:
                 self._client.check_msg()
             except Exception as e:
-                self._log(f"MQTT lost – {e}. Reconnecting…")
+                self._log(f"MQTT lost ({e}) – reconnecting…")
                 time.sleep(2)
                 try:
                     self.connect()
                 except Exception as e2:
                     self._log(f"reconnect failed: {e2}")
 
-    # helpers -----------------------------------------------------------
+    # helpers ----------------------------------------------------------
     def wifi_connected(self):
         return network.WLAN(network.STA_IF).isconnected()
 
-    # ------------------------------------------------------------------
-    @staticmethod
-    def _demo():
-        era = EraIoT("R&D", "kdi@2017", "dff9a7dd-726e-44f8-b6d1-84d3873148bd", client_id="01")
-        era.connect()
-        era.virtual_write(1, "Xin chào Era IoT!")
-        while True:
-            era.loop()
-            time.sleep(1)
-            
-# backward‑compat helpers ----------------------------------------------
-era: EraIoT | None = None
+
+# Singleton helpers ----------------------------------------------------
+era = None
 
 
-def connect_wifi(ssid, pw, token, *, client_id="01"):
+def connect_wifi(ssid, pw, token, *, client_id=None):
     global era
     era = EraIoT(ssid, pw, token, client_id=client_id)
     era.connect()
     return True
-
-
-def publish(topic, message):
-    if not era:
-        raise RuntimeError("call connect_wifi() first")
-    era.publish(topic, message)
 
 
 def publish_virtual_pin(pin, value):
@@ -610,10 +587,16 @@ def publish_virtual_pin(pin, value):
     era.virtual_write(pin, value)
 
 
-def on_receive_message(tp, cb):
+def publish(topic, msg):
     if not era:
         raise RuntimeError("call connect_wifi() first")
-    era.on_receive_message(tp, cb)
+    era.publish(topic, msg)
+
+
+def on_receive_message(key, cb):
+    if not era:
+        raise RuntimeError("call connect_wifi() first")
+    era.on_receive_message(key, cb)
 
 
 def check_message():
@@ -631,14 +614,7 @@ def is_connected():
 
 def debug_status():
     if era:
-        print("=== EraIoT status ===")
-        print("Wi‑Fi:", "OK" if era.wifi_connected() else "OFF")
-        print("MQTT:", "OK" if era._client else "OFF")
-        print("CID:", (era._fixed_cid or era._auto_client_id()).decode())
-        print("=====================")
+        print("Wi‑Fi:", "ON" if era.wifi_connected() else "OFF")
+        print("MQTT:", "ON" if era._client else "OFF")
     else:
-        print("EraIoT not initialised")
-
-
-if __name__ == "__main__":
-    EraIoT._demo()
+        print("EraIoT not init")
