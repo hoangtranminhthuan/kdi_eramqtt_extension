@@ -63,42 +63,30 @@ class MQTT:
     def wifi_connected(self) -> bool:
         return self.station.isconnected()
 
-    def connect_broker(self, server: str = 'mqtt1.eoh.io', port: int = 1883,
-                       username: str = '', password: str = '') -> None:
-        client_id = ubinascii.hexlify(machine.unique_id()).decode() + str(time.ticks_ms())
-
-        # Xác định topic is_online
-        online_topic = f"eoh/chip/{username}/is_online"
-
-        # Cấu hình will: khi client mất kết nối bất ngờ, broker sẽ publish {"ol":0}
-        will_payload = '{"ol":0}'
-        will_qos     = 1
-        will_retain  = True
-
-        # Tạo client với LWT
-        self.client = MQTTClient(
-            client_id,
-            server,
-            port,
-            username,
-            password,
-            keepalive=60,
-            will=(online_topic, will_payload, will_retain, will_qos)
-        )
-
-        # Kết nối
+    def connect_broker(self,
+                    server: str = 'mqtt1.eoh.io',
+                    port:   int = 1883,
+                    username: str = '',
+                    password: str = '') -> None:
+        client_id = ubinascii.hexlify(machine.unique_id()).decode() \
+                    + str(time.ticks_ms())
+        # 1) Tạo client và connect
+        self.client = MQTTClient(client_id, server, port, username, password)
         try:
             self.client.disconnect()
         except:
             pass
         self.client.connect()
         self.client.set_callback(self.__on_receive_message)
+        say('Connected to MQTT broker')
 
-        # Ngay sau khi connect xong, publish thông báo online
+        # 2) Chỉ publish "online" thôi
+        online_topic   = f"eoh/chip/{username}/is_online"
         online_payload = '{"ol":1}'
+        # retain=True để broker lưu trạng thái online
         self.client.publish(online_topic, online_payload, retain=True, qos=1)
+        say(f'Announced online on {online_topic}')
 
-        say('Connected to MQTT broker — online announced')
 
     def subscribe_config_down(self, token: str, callback=None) -> None:
         """
