@@ -586,8 +586,7 @@ class EraIoT:
         while True:
             era.loop()
             time.sleep(1)
-
-
+            
 # backward‑compat helpers ----------------------------------------------
 era: EraIoT | None = None
 
