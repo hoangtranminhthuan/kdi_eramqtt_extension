@@ -1,6 +1,5 @@
 import usocket as socket
 import ustruct as struct
-import utime as time
 
 class MQTTException(Exception):
     pass
