@@ -190,7 +190,7 @@ class EraIoT:
             # - username 
             # - password
             self._client = MQTTClient(
-                client_id=self._era_token,
+                client_id=b"",
                 server='mqtt1.eoh.io',
                 port=1883,
                 user=self._era_token,      # Username = token
@@ -401,9 +401,9 @@ def test_connection():
     print("=== Testing Era IoT Connection ===")
     
     # Thay bằng thông tin thực tế của bạn
-    wifi_ssid = "YOUR_WIFI_SSID"
-    wifi_password = "YOUR_WIFI_PASSWORD" 
-    era_token = "YOUR_ERA_TOKEN"
+    wifi_ssid = "R&D"
+    wifi_password = "kdi@2017" 
+    era_token = "dff9a7dd-726e-44f8-b6d1-84d3873148bd"
     
     print("1. Testing connection...")
     if connect_wifi(wifi_ssid, wifi_password, era_token):
@@ -419,3 +419,5 @@ def test_connection():
             time.sleep(1)
     else:
         print("2. Connection failed!")
+        
+test_connection()
