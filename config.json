@@ -1,8 +1,10 @@
 {
-    "name": "ERA IoT",
-    "description": "Block extension for Yolo UNO to work with Era IoT platform",
+    "name": "ERA IoT. Developed by KDI EDUCATION",
+    "description": "Block extension for xBot to work with Era IoT platform",
     "libs": [
-        "era_iot.py", "mqtt_as.py", "mqtt_sr.py", "micropython.py"
+        "umqtt_robust.py",
+        "umqtt_simple.py",
+        "era_iot.py"
     ],
     "blocks": [
         "definition.js"

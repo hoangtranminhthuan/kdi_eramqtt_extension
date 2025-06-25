@@ -124,12 +124,10 @@ Blockly.Python['era_mqtt_connect'] = function(block) {
   var token = block.getFieldValue('TOKEN');
 
   Blockly.Python.definitions_['import_era_iot'] = 'from era_iot import *';
-  Blockly.Python.definitions_['init_era_mqtt'] = "era_iot = EraIoT('" + wifi + "', '" + password + "', '" + token + "')\n";
-  
-  // TODO: Assemble Python into code variable.
-  var code = "era_iot.connect()\n";
+  var code = "connect_wifi('" + wifi + "', '" + password + "', '" + token + "')\n";
   return code;
 };
+
 
 Blockly.Blocks["era_mqtt_publish"] = {
   init: function () {
@@ -165,9 +163,7 @@ Blockly.Python['era_mqtt_publish'] = function(block) {
   Blockly.Python.definitions_['import_era_iot'] = 'from era_iot import *';
   var message = Blockly.Python.valueToCode(block, 'MESSAGE', Blockly.Python.ORDER_ATOMIC);
   var topic = block.getFieldValue('TOPIC');
-  // TODO: Assemble Python into code variable.
-  
-  var code = "await era_iot.virtual_write(" + topic + ", " + message + ")\n";
+  var code = "publish_virtual_pin(" + topic + ", str(" + message + "))\n";
   return code;
 };
 
@@ -201,18 +197,16 @@ Blockly.Python['era_mqtt_on_receive_message'] = function(block) {
   var cbFunctionName = Blockly.Python.provideFunction_(
     'on_era_virtual_pin_v' + topic,
     (globals != '')?
-    ['async def ' + Blockly.Python.FUNCTION_NAME_PLACEHOLDER_ + '(topic, value):',
+    ['def ' + Blockly.Python.FUNCTION_NAME_PLACEHOLDER_ + '(topic, value):',
       globals,
       statements_action || Blockly.Python.PASS
     ]:
-    ['async def ' + Blockly.Python.FUNCTION_NAME_PLACEHOLDER_ + '(topic, value):',
+    ['def ' + Blockly.Python.FUNCTION_NAME_PLACEHOLDER_ + '(topic, value):',
       statements_action || Blockly.Python.PASS
     ]);
 
-   
-    Blockly.Python.definitions_['task_era_virtual_pin_v' + topic] = "era_iot.on_virtual_read(" + topic + ", " + cbFunctionName + ")";
-
-  return '';
+  var code = "on_virtual_pin_change(" + topic + ", " + cbFunctionName + ")\n"; 
+  return code;
 };
 
 Blockly.Blocks['era_mqtt_get_value'] = {
