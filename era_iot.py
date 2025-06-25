@@ -423,15 +423,25 @@
 # test_connection()
 
 """
-Era IoT helper for MicroPython – auto‑fallback TLS
---------------------------------------------------
-*  Auto‑trimmed `client_id` (≤ 23 chars) – conforms to MQTT 3.1
-*  First try plain 1883, if broker closes → retry TLS 8883
-*  Works with stock `umqtt_robust` & MicroPython 1.23 on ESP32‑S3
+Era IoT helper for MicroPython – plain‑only build friendly
+----------------------------------------------------------
+*  Fixed `client_id` ≤ 23 chars (auto‑trim)
+*  Tries TLS (port 8883) **only** if `ussl` is available
+*  No hard dependency on `ussl` → chạy trên firmware ESP32 không bật TLS
 """
 
 from umqtt_robust import MQTTClient
-import network, ujson, time, ubinascii, machine, ussl
+import network, ujson, time, ubinascii, machine
+
+# ------------------------------------------------------------------
+# Optional TLS support ------------------------------------------------
+try:
+    import ussl as _ssl      # Micropython ≥1.20 alias
+except ImportError:
+    try:
+        import ssl as _ssl   # some custom builds rename
+    except ImportError:
+        _ssl = None          # TLS unavailable
 
 __all__ = [
     "EraIoT", "connect_wifi", "publish_virtual_pin", "publish",
@@ -441,7 +451,7 @@ __all__ = [
 
 
 class EraIoT:
-    """High‑level helper for Era IoT cloud (mqtt1.eoh.io)."""
+    """Helper class to push data to Era IoT cloud via MQTT."""
 
     def __init__(self, ssid, password, token, *, client_id=None, keepalive=60, debug=True):
         self._ssid = ssid
@@ -460,7 +470,7 @@ class EraIoT:
             print("[ERA]", msg)
 
     # Wi‑Fi ------------------------------------------------------------
-    def _ensure_wifi(self, tout=30):
+    def _ensure_wifi(self, timeout=30):
         wlan = network.WLAN(network.STA_IF)
         wlan.active(True)
         if wlan.isconnected():
@@ -469,7 +479,7 @@ class EraIoT:
         wlan.connect(self._ssid, self._pw)
         tic = time.time()
         while not wlan.isconnected():
-            if time.time() - tic > tout:
+            if time.time() - tic > timeout:
                 raise OSError("Wi‑Fi timeout")
             print(".", end="")
             time.sleep(0.5)
@@ -487,7 +497,7 @@ class EraIoT:
     def _topic(self, suf):
         return f"eoh/chip/{self._token}{suf}"
 
-    def _mk_client(self, host, port, ssl_flag):
+    def _mk_client(self, host, port, use_ssl):
         return MQTTClient(
             client_id=self._auto_cid(),
             server=host,
@@ -495,28 +505,32 @@ class EraIoT:
             user=self._token.encode(),
             password=self._token.encode(),
             keepalive=self._keepalive,
-            ssl=ssl_flag,
+            ssl=use_ssl,
         )
 
     def connect(self):
         self._ensure_wifi()
-        for host, port, use_ssl in (("mqtt1.eoh.io", 1883, False), ("mqtt1.eoh.io", 8883, True)):
+
+        attempts = [("mqtt1.eoh.io", 1883, False)]
+        if _ssl is not None:
+            attempts.append(("mqtt1.eoh.io", 8883, True))
+
+        for host, port, use_ssl in attempts:
+            proto = "TLS" if use_ssl else "plain"
             try:
-                cid = self._auto_cid().decode()
-                proto = "TLS" if use_ssl else "plain"
-                self._log(f"MQTT {proto} connect → {host}:{port} CID={cid}")
+                self._log(f"MQTT {proto} connect → {host}:{port} CID={self._auto_cid().decode()}")
                 self._client = self._mk_client(host, port, use_ssl)
                 self._client.set_last_will(self._topic("/is_online"), b"{\"ol\":0}", retain=True)
                 self._client.set_callback(self._on_msg)
                 self._client.connect()
-                break  # success
+                break
             except (OSError, IndexError):
-                self._log("connect failed – trying fallback…")
+                self._log("connect failed – trying next…")
                 self._client = None
         if not self._client:
-            raise OSError("Unable to connect MQTT (plain & TLS failed)")
+            raise OSError("Unable to connect MQTT on available ports")
 
-        # subs & announce
+        # subs & online flag
         self._client.subscribe(self._topic("/down"))
         self._client.subscribe(self._topic("/virtual_pin/#"))
         self.publish(self._topic("/is_online"), ujson.dumps({"ol": 1}), retain=True)
