@@ -1,10 +1,10 @@
 {
-    "name": "ERA IoT. Developed by KDI EDUCATION",
-    "description": "Block extension for xBot to work with Era IoT platform",
+    "name": "MQTT",
+    "description": "Mục mở rộng hỗ trợ giao tiếp MQTT cho ứng dụng IoT",
     "libs": [
         "umqtt_robust.py",
         "umqtt_simple.py",
-        "era_iot.py"
+        "mqtt.py"
     ],
     "blocks": [
         "definition.js"
