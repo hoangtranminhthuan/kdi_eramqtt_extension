@@ -190,7 +190,7 @@ class EraIoT:
             # - username 
             # - password
             self._client = MQTTClient(
-                client_id=b"",
+                client_id="EraSensor01",
                 server='mqtt1.eoh.io',
                 port=1883,
                 user=self._era_token,      # Username = token
