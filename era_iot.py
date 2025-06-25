@@ -190,7 +190,7 @@
 #             # - username 
 #             # - password
 #             self._client = MQTTClient(
-#                 client_id="EraSensor01",
+#                 client_id="01",
 #                 server='mqtt1.eoh.io',
 #                 port=1883,
 #                 user=self._era_token,      # Username = token
@@ -580,7 +580,7 @@ class EraIoT:
     # ------------------------------------------------------------------
     @staticmethod
     def _demo():
-        era = EraIoT("R&D", "kdi@2017", "dff9a7dd-726e-44f8-b6d1-84d3873148bd", client_id="EraSensor01")
+        era = EraIoT("R&D", "kdi@2017", "dff9a7dd-726e-44f8-b6d1-84d3873148bd", client_id="01")
         era.connect()
         era.virtual_write(1, "Xin chào Era IoT!")
         while True:
@@ -592,7 +592,7 @@ class EraIoT:
 era: EraIoT | None = None
 
 
-def connect_wifi(ssid, pw, token, *, client_id="EraSensor01"):
+def connect_wifi(ssid, pw, token, *, client_id="01"):
     global era
     era = EraIoT(ssid, pw, token, client_id=client_id)
     era.connect()
