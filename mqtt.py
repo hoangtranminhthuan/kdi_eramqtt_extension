@@ -147,39 +147,39 @@ class MQTT:
         self.client.publish(full_topic, message)
         self.last_sent = time.ticks_ms()
 
-
+mqtt = MQTT()
 # --------------------
 # Example usage
 # --------------------
-def main():
-    TOKEN      = 'dff9a7dd-726e-44f8-b6d1-84d3873148bd'
-    WIFI_SSID  = 'R&D'
-    WIFI_PASS  = 'kdi@2017'
+# def main():
+#     TOKEN      = 'dff9a7dd-726e-44f8-b6d1-84d3873148bd'
+#     WIFI_SSID  = 'R&D'
+#     WIFI_PASS  = 'kdi@2017'
 
-    mqtt = MQTT()
+#     mqtt = MQTT()
 
-    # 1. Kết nối WiFi
-    mqtt.connect_wifi(WIFI_SSID, WIFI_PASS)
+#     # 1. Kết nối WiFi
+#     mqtt.connect_wifi(WIFI_SSID, WIFI_PASS)
 
-    # 2. Kết nối MQTT Broker
-    mqtt.connect_broker(server='mqtt1.eoh.io', port=1883)
+#     # 2. Kết nối MQTT Broker
+#     mqtt.connect_broker(server='mqtt1.eoh.io', port=1883)
 
-    # 3. Subscribe cấu hình xuống
-    mqtt.subscribe_config_down(TOKEN)
+#     # 3. Subscribe cấu hình xuống
+#     mqtt.subscribe_config_down(TOKEN)
 
-    # 4. Vòng lặp chính
-    while True:
-        mqtt.check_message()
+#     # 4. Vòng lặp chính
+#     while True:
+#         mqtt.check_message()
 
-        # Ví dụ: nếu pin 1 đã có config_id, gửi giá trị 123
-        if 1 in mqtt.virtual_pins:
-            cfg = mqtt.virtual_pins[1]
-            topic = f"eoh/chip/{TOKEN}/config/{cfg}/value"
-            payload = ujson.dumps({"v": 123})
-            mqtt.publish(topic, payload)
+#         # Ví dụ: nếu pin 1 đã có config_id, gửi giá trị 123
+#         if 1 in mqtt.virtual_pins:
+#             cfg = mqtt.virtual_pins[1]
+#             topic = f"eoh/chip/{TOKEN}/config/{cfg}/value"
+#             payload = ujson.dumps({"v": 123})
+#             mqtt.publish(topic, payload)
 
-        time.sleep(5)
+#         time.sleep(5)
 
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()
