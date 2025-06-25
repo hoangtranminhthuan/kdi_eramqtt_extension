@@ -1,35 +1,32 @@
-
 import time
-from umqtt_robust import MQTTClient
+import network
 import ubinascii
 import machine
-import network
-from utility import *
+import ujson
+from umqtt_robust import MQTTClient
+from utility import say
 
 class MQTT:
-
     def __init__(self):
         self.client = None
         self.server = ''
         self.username = ''
         self.password = ''
         self.topic_prefix = ''
-        self.message = ''
-        self.topic = ''
         self.wifi_ssid = ''
         self.wifi_password = ''
         self.callbacks = {}
         self.last_sent = 0
+        # mapping pin_number → config_id
+        self.virtual_pins = {}
 
-    def __on_receive_message(self, topic, msg):
-        #print((str(topic), str(msg)))
-        msg = msg.decode('ascii')
-        topic = topic.decode('ascii')
-        if callable(self.callbacks.get(topic)):
-            self.callbacks.get(topic)(msg)
-            
+    def __on_receive_message(self, topic: bytes, msg: bytes) -> None:
+        topic_str = topic.decode('ascii')
+        payload   = msg.decode('ascii')
+        if callable(self.callbacks.get(topic_str)):
+            self.callbacks[topic_str](payload)
 
-    def connect_wifi(self, ssid, password, wait_for_connected=True):
+    def connect_wifi(self, ssid: str, password: str, wait_for_connected: bool = True) -> None:
         self.wifi_ssid = ssid
         self.wifi_password = password
         say('Connecting to WiFi...')
@@ -38,34 +35,37 @@ class MQTT:
             self.station.active(False)
             time.sleep_ms(500)
 
+        # Try up to 5 times
         for i in range(5):
-          try:
-              self.station.active(True)
-              self.station.connect(ssid, password)
-              break
-          except OSError:
-              self.station.active(False)
-              time.sleep_ms(500)
-              if i == 4:
-                  say('Failed to connect to WiFi')
-                  raise Exception('Failed to connect to WiFi')
+            try:
+                self.station.active(True)
+                self.station.connect(ssid, password)
+                break
+            except OSError:
+                self.station.active(False)
+                time.sleep_ms(500)
+                if i == 4:
+                    say('Failed to connect to WiFi')
+                    raise
 
         if wait_for_connected:
             count = 0
-            while self.station.isconnected() == False:
-                count = count + 1
-                if count > 150:
+            while not self.station.isconnected():
+                count += 1
+                if count > 150:  # ~15 seconds
                     say('Failed to connect to WiFi')
-                    raise Exception('Failed to connect to WiFi')
+                    raise
                 time.sleep_ms(100)
 
-            say('Wifi connected. IP:' + self.station.ifconfig()[0])
+            ip = self.station.ifconfig()[0]
+            say(f'WiFi connected. IP: {ip}')
 
-    def wifi_connected(self):
+    def wifi_connected(self) -> bool:
         return self.station.isconnected()
 
-    def connect_broker(self, server='mqtt1.eoh.io', port=1883, username='', password=''):
-        client_id = str(ubinascii.hexlify(machine.unique_id())) + str(time.ticks_ms())
+    def connect_broker(self, server: str = 'mqtt1.eoh.io', port: int = 1883,
+                       username: str = '', password: str = '') -> None:
+        client_id = ubinascii.hexlify(machine.unique_id()).decode() + str(time.ticks_ms())
         self.client = MQTTClient(client_id, server, port, username, password)
         try:
             self.client.disconnect()
@@ -73,67 +73,113 @@ class MQTT:
             pass
         self.client.connect()
         self.client.set_callback(self.__on_receive_message)
-        self.server = server
+        self.server   = server
         self.username = username
         self.password = password
-        self.topic_prefix = ''
+        self.topic_prefix = ''  # if you need a base prefix, set it here
         say('Connected to MQTT broker')
 
-    def check_message(self):
-        if self.client == None:
+    def subscribe_config_down(self, token: str, callback=None) -> None:
+        """
+        Subscribe topic eoh/chip/{token}/config/down.
+        If no callback provided, use internal handler to populate virtual_pins.
+        """
+        topic = f"eoh/chip/{token}/config/down"
+        cb = callback or self._handle_config_down
+        self.on_receive_message(topic, cb)
+
+    def _handle_config_down(self, msg: str) -> None:
+        """
+        Default handler for config/down messages.
+        Parses JSON and fills self.virtual_pins.
+        """
+        data = ujson.loads(msg)
+        devices = data.get('configuration', {}) \
+                      .get('arduino_pin', {}) \
+                      .get('devices', [])
+        for d in devices:
+            for v in d.get('virtual_pins', []):
+                pin    = int(v['pin_number'])
+                cfg_id = int(v['config_id'])
+                self.virtual_pins[pin] = cfg_id
+        print("Config received, pin→config_id:", self.virtual_pins)
+
+    def on_receive_message(self, topic: str, callback) -> None:
+        """
+        Subscribe an arbitrary topic and register a callback.
+        """
+        full_topic = self.topic_prefix + topic
+        self.callbacks[full_topic] = callback
+        self.client.subscribe(full_topic)
+        say(f"Subscribed to {full_topic}")
+
+    def resubscribe(self) -> None:
+        """
+        Re-subscribe to all topics after reconnect.
+        """
+        for t in self.callbacks.keys():
+            self.client.subscribe(t)
+
+    def check_message(self) -> None:
+        """
+        Should be called periodically.
+        Checks for incoming messages and handles reconnection logic.
+        """
+        if not self.client:
             return
         if not self.wifi_connected():
             say('WiFi disconnected. Reconnecting...')
             self.connect_wifi(self.wifi_ssid, self.wifi_password)
             self.client.connect()
-            #self.connect_broker()
-            self.resubscribe()         
-
+            self.resubscribe()
         self.client.check_msg()
-    
-    def on_receive_message(self, topic, callback):
-        if self.client == None:
-            return
-        topic = self.topic_prefix + str(topic)
 
-        self.callbacks[topic] = callback
-        self.client.subscribe(topic)
-    
-    def resubscribe(self):
-        for key in self.callbacks.keys():
-            self.client.subscribe(key)
-            #print(key)
-    
-    def publish(self, topic, message):
-        if self.client == None:
+    def publish(self, topic: str, message: str) -> None:
+        """
+        Publish a string message to a topic, throttled to 1s between sends.
+        """
+        if not self.client:
             return
         now = time.ticks_ms()
         if now - self.last_sent < 1000:
-            time.sleep_ms(1000-(now-self.last_sent))
-        topic = self.topic_prefix + str(topic)
-        self.client.publish(topic, str(message))
+            time.sleep_ms(1000 - (now - self.last_sent))
+        full_topic = self.topic_prefix + topic
+        self.client.publish(full_topic, message)
         self.last_sent = time.ticks_ms()
 
-mqtt = MQTT()
 
-def unit_test():    
-    import time
-    mqtt.connect_wifi('wifi', 'password')
-    mqtt.connect_broker(server='mqtt1.eoh.io', port=1883, username='test', password='')
-    mqtt.publish('V1', 'Hello')
+# --------------------
+# Example usage
+# --------------------
+# def main():
+#     TOKEN      = 'YOUR_TOKEN'
+#     WIFI_SSID  = 'your_wifi_ssid'
+#     WIFI_PASS  = 'your_wifi_password'
 
-    def process(msg):
-      print(msg)
+#     mqtt = MQTT()
 
-    mqtt.on_receive_message('V2', process)
-    i = 0
-    while True:
-      mqtt.check_message()
-      mqtt.publish('V2', i)
-      i += 1
-      time.sleep(1)
+#     # 1. Kết nối WiFi
+#     mqtt.connect_wifi(WIFI_SSID, WIFI_PASS)
 
-if __name__ == '__main__':
-    unit_test()
+#     # 2. Kết nối MQTT Broker
+#     mqtt.connect_broker(server='mqtt1.eoh.io', port=1883)
+
+#     # 3. Subscribe cấu hình xuống
+#     mqtt.subscribe_config_down(TOKEN)
+
+#     # 4. Vòng lặp chính
+#     while True:
+#         mqtt.check_message()
+
+#         # Ví dụ: nếu pin 1 đã có config_id, gửi giá trị 123
+#         if 1 in mqtt.virtual_pins:
+#             cfg = mqtt.virtual_pins[1]
+#             topic = f"eoh/chip/{TOKEN}/config/{cfg}/value"
+#             payload = ujson.dumps({"v": 123})
+#             mqtt.publish(topic, payload)
+
+#         time.sleep(5)
 
 
+# if __name__ == '__main__':
+#     main()
