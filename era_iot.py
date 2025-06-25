@@ -526,6 +526,7 @@ class EraIoT:
             keepalive=self._keepalive,
             ssl=ssl
         )
+        
         self._client.set_last_will(self._topic("/is_online"), b"{\"ol\":0}", retain=True)
         self._client.set_callback(self._on_message)
         self._client.connect()
