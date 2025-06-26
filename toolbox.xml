@@ -24,7 +24,7 @@
         </shadow>
       </value>
     </block>
-    <block type="yolobit_mqtt_connect_custom_servers">
+    <!-- <block type="yolobit_mqtt_connect_custom_servers">
       <value name="SERVER">
         <shadow type="text">
           <field name="TEXT"></field>
@@ -64,13 +64,6 @@
       <value name="TOPIC">
         <shadow type="text">
           <field name="TEXT">topic</field>
-        </shadow>
-      </value>
-    </block>
-    <!-- <block type="yolobit_mqtt_publish_value">
-      <value name="VALUE">
-        <shadow type="math_number">
-          <field name="NUM">0</field>
         </shadow>
       </value>
     </block> -->
