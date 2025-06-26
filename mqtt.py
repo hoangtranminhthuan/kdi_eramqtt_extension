@@ -180,7 +180,7 @@ class MQTT:
         topic = f"eoh/chip/{username}/config/{cfg_id}/value"
         # Build JSON payload using ujson
         # Ensure payload uses integer 'v' key, as required by server
-        payload = f'{{"v": {int(value)}}}'
+        payload = f'{{"v": {value}}}'
 
         say(f" virtual publish → topic={topic}, payload={payload}")
         # Publish with retain and QoS=1 to ensure delivery
