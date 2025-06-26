@@ -121,6 +121,26 @@ class MQTT:
                 cfg_id = int(v['config_id'])
                 self.virtual_pins[pin] = cfg_id
         print("Config received, pin→config_id:", self.virtual_pins)
+        
+    def subscribe_virtual_value(self, token: str) -> None:
+        """
+        Subscribe to value topic for all registered virtual pins.
+        Example topic: eoh/chip/{token}/virtual_pin/{pin}
+        """
+        for pin in self.virtual_pins:
+            topic = f"eoh/chip/{token}/virtual_pin/{pin}"
+            
+            def make_callback(p):
+                def cb(msg: str):
+                    try:
+                        data = ujson.loads(msg)
+                        self.virtual_values[p] = data.get("value", None)
+                        print(f"[MQTT] Pin V{p} received value: {self.virtual_values[p]}")
+                    except Exception as e:
+                        print(f"[MQTT] Error parsing value for V{p}: {e}")
+                return cb
+            
+            self.on_receive_message(topic, make_callback(pin))
 
     def on_receive_message(self, topic: str, callback) -> None:
         """
