@@ -107,7 +107,7 @@ class MQTT:
                       .get('arduino_pin', {}) \
                       .get('devices', [])
                       
-        # Xóa toàn bộ mapping cũ
+        
         self.virtual_pins.clear()              
                       
         for d in devices:
