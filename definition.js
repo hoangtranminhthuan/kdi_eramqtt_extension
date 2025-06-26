@@ -146,7 +146,7 @@ Blockly.Blocks['yolobit_mqtt_read_value'] = {
 };
 
 Blockly.Python['yolobit_mqtt_read_value'] = function(block) {
-  Blockly.Python.definitions_['import_mqtt_parse'] = 'from mqtt import parse_virtual_pin_debug';
+  Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
   var topic = Blockly.Python.valueToCode(block, 'TOPIC', Blockly.Python.ORDER_ATOMIC) || "''";
   var msg = Blockly.Python.valueToCode(block, 'MSG', Blockly.Python.ORDER_ATOMIC) || "''";
   var code = 'parse_virtual_pin_debug(' + topic + ', ' + msg + ')[1]';
