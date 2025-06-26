@@ -85,10 +85,6 @@ class MQTT:
         self.client.connect()
         self.client.set_callback(self.__on_receive_message)
         say('Connected to MQTT broker')
-        
-        # password chính là token của bạn
-        self.topic_prefix = f"eoh/chip/{username}"
-        say(f"Using topic prefix: {self.topic_prefix}")
 
         # 2) Chỉ publish "online" thôi
         online_topic   = f"eoh/chip/{username}/is_online"
@@ -171,20 +167,17 @@ class MQTT:
         self.client.publish(full_topic, message)
         self.last_sent = time.ticks_ms()
         
-    def virtual_write(self, pin, value):
-        # Ensure we have a mapping for this virtual pin
+    def virtual_write(self, pin: int, value: Union[int, float, str]) -> None:
+        say(f"virtual_write(pin={pin}, value={value})")
         if pin not in self.virtual_pins:
-            say(f"Pin {pin} chưa được đăng ký")
+            say(f"  Pin {pin} chưa được đăng ký")
             return
-        # Look up the corresponding config_id
+
         cfg_id = self.virtual_pins[pin]
-        # Build the full topic (expects topic_prefix set to 'eoh/chip/{token}/')
+        # CHỈNH LẠI DÒNG NÀY
         topic = f"{self.topic_prefix}config/{cfg_id}/value"
-        # Convert the value to bytes
         payload = str(value).encode('ascii')
-        # Log for debugging
-        say(f"virtual publish → topic={topic}, payload={payload}")
-        # Publish to the broker
+        say(f" virtual publish → topic={topic}, payload={payload}")
         self.client.publish(topic, payload)
 
 
