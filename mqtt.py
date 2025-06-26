@@ -83,7 +83,7 @@ class MQTT:
             pass
         self.client.connect()
         self.client.set_callback(self.__on_receive_message)
-        say('Connected to MQTT broker---------------------------v11')
+        say('Connected to MQTT broker---------------------------v9')
 
         # 2) Chỉ publish "online" thôi
         online_topic   = f"eoh/chip/{username}/is_online"
@@ -186,21 +186,7 @@ class MQTT:
         # Publish with retain and QoS=1 to ensure delivery
         self.client.publish(topic, str(payload), retain=True, qos=1)
         
-    def parse_virtual_pin_debug(topic: str, msg: str) -> (int, int):
-        """
-        Nhận topic và payload JSON, tách ra pin và value rồi in debug.
-        Trả về tuple (pin, value).
-        """
-        # 1) Lấy số pin từ cuối topic
-        pin = int(topic.rsplit('/', 1)[-1])
-        # 2) Giải mã payload JSON
-        data = ujson.loads(msg)
-        value = int(data.get('value', 0))
-        # 3) In debug
-        print(f"[DEBUG] Topic: {topic}")
-        print(f"[DEBUG] Parsed → pin: V{pin}, value: {value}")
-        # 4) Trả về để dùng tiếp
-        return pin, value
+
 
             
     

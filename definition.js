@@ -129,26 +129,3 @@ Blockly.Python['yolobit_mqtt_publish_value'] = function(block) {
   return code;
 };
 
-// Block parse topic và payload, trả về value
-Blockly.Blocks['yolobit_mqtt_read_value'] = {
-  init: function() {
-    this.appendValueInput('TOPIC')
-        .setCheck('String')
-        .appendField('lấy giá trị từ Topic');
-    this.appendValueInput('MSG')
-        .setCheck('String')
-        .appendField('với payload');
-    this.setOutput(true, 'Number');
-    this.setColour(230);
-    this.setTooltip('Parse topic và payload JSON, trả về value');
-    this.setHelpUrl('');
-  }
-};
-
-Blockly.Python['yolobit_mqtt_read_value'] = function(block) {
-  Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
-  var topic = Blockly.Python.valueToCode(block, 'TOPIC', Blockly.Python.ORDER_ATOMIC) || "''";
-  var msg = Blockly.Python.valueToCode(block, 'MSG', Blockly.Python.ORDER_ATOMIC) || "''";
-  var code = 'parse_virtual_pin_debug(' + topic + ', ' + msg + ')[1]';
-  return [code, Blockly.Python.ORDER_ATOMIC];
-};
