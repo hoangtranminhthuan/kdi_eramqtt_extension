@@ -168,19 +168,21 @@ class MQTT:
 
     def virtual_write(self, pin: int, value: Union[int, float, str], username: str = '') -> None:
         """
-        Publish a value to a virtual pin. Payload is JSON {"v": value}.
+        Publish a value to a virtual pin. Payload is JSON {"value": value}.
         """
-        say(f"virtual_write(pin={pin}, value={value})")
+        say(f"virtual_write(pin={pin}, value={value}, username={username})")
         if pin not in self.virtual_pins:
             say(f"  Pin {pin} chưa được đăng ký")
             return
 
         cfg_id = self.virtual_pins[pin]
-        topic = f"eoh/chip/{username}/config/{cfg_id}/value"
-        # Using ujson exclusively for JSON serialization
-        payload = '{"v":1}'
+        token = username or getattr(self, 'token', '')
+        topic = f"eoh/chip/{token}/config/{cfg_id}/value"
+        # Build JSON payload using ujson
+        payload = ujson.dumps({"value": value})
         say(f" virtual publish → topic={topic}, payload={payload}")
-        self.client.publish(topic, payload,  retain=True, qos=1)
+        # Publish with retain and QoS=1 to ensure delivery
+        self.client.publish(topic, payload, retain=True, qos=1)
 
 mqtt = MQTT()
 
