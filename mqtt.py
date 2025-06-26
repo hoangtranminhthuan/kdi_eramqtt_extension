@@ -87,7 +87,7 @@ class MQTT:
         say('Connected to MQTT broker')
         
         # password chính là token của bạn
-        self.topic_prefix = f"eoh/chip/{password}"
+        self.topic_prefix = f"eoh/chip/{username}"
         say(f"Using topic prefix: {self.topic_prefix}")
 
         # 2) Chỉ publish "online" thôi
