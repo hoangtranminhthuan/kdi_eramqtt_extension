@@ -167,21 +167,21 @@ class MQTT:
         self.client.publish(full_topic, message)
         self.last_sent = time.ticks_ms()
         
-        def virtual_write(self, pin: int, value: Union[int, float, str]) -> None:
-                say(f"virtual_write pin={pin}, value={value}")
-                if pin not in self.virtual_pins:
-                    say(f"Pin {pin} not registered")
-                    return
+    def virtual_write(self, pin: int, value: Union[int, float, str]) -> None:
+            say(f"virtual_write pin={pin}, value={value}")
+            if pin not in self.virtual_pins:
+                say(f"Pin {pin} not registered")
+                return
 
-                cfg_id = self.virtual_pins[pin]
-                prefix = self.topic_prefix
-                if not prefix.endswith('/'):
-                    prefix += '/'
+            cfg_id = self.virtual_pins[pin]
+            prefix = self.topic_prefix
+            if not prefix.endswith('/'):
+                prefix += '/'
 
-                topic = f"{prefix}config/{cfg_id}/value"
-                payload = str(value)
-                say(f"Publishing virtual value to {topic}, payload {payload}")
-                self.client.publish(topic, payload)
+            topic = f"{prefix}config/{cfg_id}/value"
+            payload = str(value)
+            say(f"Publishing virtual value to {topic}, payload {payload}")
+            self.client.publish(topic, payload)
 
 
 
