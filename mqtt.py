@@ -128,20 +128,28 @@ class MQTT:
         Subscribe to value topic for all registered virtual pins.
         Example topic: eoh/chip/{token}/virtual_pin/{pin}
         """
+        print("[MQTT] Bắt đầu đăng ký topic giá trị cho các virtual pin:")
+        print("virtual_pins hiện tại:", self.virtual_pins)
+
         for pin in self.virtual_pins:
             topic = f"eoh/chip/{token}/virtual_pin/{pin}"
-            
+            print(f"  → Subscribing to topic: {topic}")
+
             def make_callback(p):
                 def cb(msg: str):
+                    print(f"[MQTT] Nhận được từ V{p}: raw = {msg}")
                     try:
                         data = ujson.loads(msg)
-                        self.virtual_values[p] = data.get("value", None)
-                        print(f"[MQTT] Pin V{p} received value: {self.virtual_values[p]}")
+                        value = data.get("value", None)
+                        trigger_id = data.get("trigger_id", None)
+                        self.virtual_values[p] = value
+                        print(f"[MQTT] V{p} → value = {value}, trigger_id = {trigger_id}")
                     except Exception as e:
                         print(f"[MQTT] Error parsing value for V{p}: {e}")
                 return cb
-            
+
             self.on_receive_message(topic, make_callback(pin))
+
 
     def on_receive_message(self, topic: str, callback) -> None:
         """
