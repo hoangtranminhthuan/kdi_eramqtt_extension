@@ -83,7 +83,7 @@ class MQTT:
             pass
         self.client.connect()
         self.client.set_callback(self.__on_receive_message)
-        say('Connected to MQTT broker---------------------------v1')
+        say('Connected to MQTT broker---------------------------v2')
 
         # 2) Chỉ publish "online" thôi
         online_topic   = f"eoh/chip/{username}/is_online"
@@ -178,12 +178,9 @@ class MQTT:
         cfg_id = self.virtual_pins[pin]
         topic = f"eoh/chip/{username}/config/{cfg_id}/value"
         # Using ujson exclusively for JSON serialization
-        import ujson as json
-        payload = '{"v": value}'
+        payload = '{"v": ' + str(value) + '}'
         say(f" virtual publish → topic={topic}, payload={payload}")
-        self.client.publish(topic, payload)
-
-
+        self.client.publish(topic, payload,  retain=True, qos=1)
 
 mqtt = MQTT()
 
