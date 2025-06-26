@@ -174,11 +174,10 @@ class MQTT:
             return
 
         cfg_id = self.virtual_pins[pin]
-        # prefix = self.topic_prefix
+        prefix = self.topic_prefix
         
-        prefix = f"eoh/chip/d285352e-da16-4873-9cc9-30f9eee17c56/"
-        # if not prefix.endswith('/'):
-        #     prefix += '/'
+        if not prefix.endswith('/'):
+            prefix += '/'
 
         topic = f"{prefix}config/{cfg_id}/value"
         payload = str(value)
