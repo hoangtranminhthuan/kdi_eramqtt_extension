@@ -155,5 +155,23 @@ class MQTT:
         full_topic = self.topic_prefix + topic
         self.client.publish(full_topic, message)
         self.last_sent = time.ticks_ms()
+        
+    def virtual_write(self, pin: int, value: int, qos: int = 1) -> None:
+        """
+        Gửi value lên topic:
+          eoh/chip/{TOKEN}/config/{config_id}/value
+        """
+        # Lấy config_id đã lưu trước đó
+        cfg = self.virtual_pins.get(pin)
+        if cfg is None:
+            return  # pin chưa được cấu hình xuống
+
+        # Dùng username (đã set = TOKEN) để build topic
+        topic = f"eoh/chip/{self.username}/config/{cfg}/value"
+        # Gói payload JSON
+        payload = ujson.dumps({"v": value})
+        # Dùng luôn publish() đã có để gửi
+        self.publish(topic, payload)
+
 
 mqtt = MQTT()
