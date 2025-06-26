@@ -90,10 +90,10 @@ class MQTT:
 
     def subscribe_config_down(self, token: str, callback=None) -> None:
         """
-        Subscribe topic eoh/chip/{token}/config/down.
+        Subscribe topic eoh/chip/{token}/down.
         If no callback provided, use internal handler to populate virtual_pins.
         """
-        topic = f"eoh/chip/{token}/config/down"
+        topic = f"eoh/chip/{token}/down"
         cb = callback or self._handle_config_down
         self.on_receive_message(topic, cb)
 
