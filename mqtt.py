@@ -103,7 +103,7 @@ class MQTT:
         Subscribe topic eoh/chip/{token}/down.
         If no callback provided, use internal handler to populate virtual_pins.
         """
-        topic = f"{self.topic_prefix}/down"
+        topic = f"eoh/chip/{token}/down"
         cb = callback or self._handle_config_down
         self.on_receive_message(topic, cb)
 
