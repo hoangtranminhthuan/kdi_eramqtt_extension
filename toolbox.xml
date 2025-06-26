@@ -24,48 +24,6 @@
         </shadow>
       </value>
     </block>
-    <!-- <block type="yolobit_mqtt_connect_custom_servers">
-      <value name="SERVER">
-        <shadow type="text">
-          <field name="TEXT"></field>
-        </shadow>
-      </value>
-      <value name="PORT">
-        <shadow type="math_number">
-          <field name="NUM">1883</field>
-        </shadow>
-      </value>
-      <value name="USERNAME">
-        <shadow type="text">
-          <field name="TEXT"></field>
-        </shadow>
-      </value>
-      <value name="KEY">
-        <shadow type="text">
-          <field name="TEXT"></field>
-        </shadow>
-      </value>
-    </block>
-    <block type="yolobit_mqtt_publish">
-      <value name="MESSAGE">
-        <shadow type="text">
-          <field name="TEXT">Hello</field>
-        </shadow>
-      </value>
-      <value name="TOPIC">
-        <shadow type="text">
-          <field name="TEXT">topic</field>
-        </shadow>
-      </value>
-    </block>
-    <block type="yolobit_mqtt_check_connection"/>
-    <block type="yolobit_mqtt_check_message" />
-    <block type="yolobit_mqtt_on_receive_message">
-      <value name="TOPIC">
-        <shadow type="text">
-          <field name="TEXT">topic</field>
-        </shadow>
-      </value>
-    </block> -->
+    <block type="yolobit_mqtt_virtual_pin_map"></block>
   </category>
 </xml>
