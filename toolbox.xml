@@ -32,5 +32,6 @@
         </shadow>
       </value>
     </block>
+    <block type="yolobit_mqtt_read_value"></block>
   </category>
 </xml>
