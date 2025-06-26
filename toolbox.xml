@@ -24,7 +24,7 @@
         </shadow>
       </value>
     </block>
-    <block type="yolobit_mqtt_subscribe_and_show_pins"></block>
+    <block type="yolobit_mqtt_subscribe_config_down"></block>
     <block type="yolobit_mqtt_publish_value">
       <value name="VALUE">
         <shadow type="math_number">
