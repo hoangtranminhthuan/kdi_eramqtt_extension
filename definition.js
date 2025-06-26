@@ -72,26 +72,37 @@ Blockly.Python['yolobit_mqtt_connect_default_servers'] = function(block) {
 };
 
 
-// 1) Định nghĩa block (không đổi)
-Blockly.Blocks['yolobit_mqtt_subscribe_config_down'] = {
+// --- definition.js ---
+
+Blockly.Blocks['yolobit_mqtt_subscribe_and_show_pins'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("lấy cấu hình xuống và in ra Virtual pin → config_id");
+        .appendField("lấy cấu hình xuống và hiển thị pin");
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setColour(230);
-    this.setTooltip("Subscribe eoh/chip/{TOKEN}/config/down rồi in từng pin và config_id");
+    this.setTooltip("Subscribe eoh/chip/{TOKEN}/down rồi in Virtual pin → config_id");
     this.setHelpUrl("");
   }
 };
 
-// 2) Generator Python (mới)
-Blockly.Python['yolobit_mqtt_subscribe_config_down'] = function(block) {
-  // đảm bảo có import mqtt và biến TOKEN
+Blockly.Python['yolobit_mqtt_subscribe_and_show_pins'] = function(block) {
+  // đảm bảo import mqtt và TOKEN có sẵn
   Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
-  Blockly.Python.definitions_['mqtt_token'] = Blockly.Python.definitions_['mqtt_token'] || '';
-  var code  = 'mqtt.subscribe_config_down(TOKEN)\n';
-      code += 'for pin, cfg in mqtt.virtual_pins.items():\n';
-      code += '    print("Virtual pin V%d → config_id %d" % (pin, cfg))\n';
+  // định nghĩa callback in ra pin→config_id
+  var funcName = Blockly.Python.provideFunction_(
+    'print_virtual_pins',
+    [
+      'def %FUNCTION%(msg):',
+      '  # payload JSON đã được lưu vào mqtt.virtual_pins',
+      '  for pin, cfg in mqtt.virtual_pins.items():',
+      '    print("Virtual pin V%d -> config_id %d" % (pin, cfg))'
+    ].join('\n')
+  );
+  // subscribe đúng đường down
+  var code = 'mqtt.on_receive_message(' +
+             '"eoh/chip/%s/down" % TOKEN, ' +
+             funcName +
+             ')\n';
   return code;
 };
