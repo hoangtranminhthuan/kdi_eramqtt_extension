@@ -168,16 +168,16 @@ class MQTT:
         self.last_sent = time.ticks_ms()
         
     def virtual_write(self, pin: int, value: Union[int, float, str]) -> None:
-        self._log(f"virtual_write(pin={pin}, value={value})")
+        say(f"virtual_write(pin={pin}, value={value})")
         if pin not in self.virtual_pins:
-            self._log(f"  ⚠️ Pin {pin} chưa được đăng ký")
+            say(f"  Pin {pin} chưa được đăng ký")
             return
 
         cfg_id = self.virtual_pins[pin]
         # CHỈNH LẠI DÒNG NÀY
         topic = f"{self.topic_prefix}config/{cfg_id}/value"
         payload = str(value).encode('ascii')
-        self._log(f"▶️ virtual publish → topic={topic}, payload={payload}")
+        say(f" virtual publish → topic={topic}, payload={payload}")
         self.client.publish(topic, payload)
 
 
