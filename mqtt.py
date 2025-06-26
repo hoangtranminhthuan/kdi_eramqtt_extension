@@ -177,7 +177,7 @@ class MQTT:
 
         cfg_id = self.virtual_pins[pin]
         token = username or getattr(self, 'token', '')
-        topic = f"eoh/chip/{token}/config/{cfg_id}/value"
+        topic = f"eoh/chip/{username}/config/{cfg_id}/value"
         # Build JSON payload using ujson
         # Ensure payload uses integer 'v' key, as required by server
         payload = f'{{"v": {int(value)}}}'
