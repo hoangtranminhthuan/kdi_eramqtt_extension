@@ -106,6 +106,10 @@ class MQTT:
         devices = data.get('configuration', {}) \
                       .get('arduino_pin', {}) \
                       .get('devices', [])
+                      
+        # Xóa toàn bộ mapping cũ
+        self.virtual_pins.clear()              
+                      
         for d in devices:
             for v in d.get('virtual_pins', []):
                 pin    = int(v['pin_number'])
@@ -175,3 +179,6 @@ class MQTT:
 
 
 mqtt = MQTT()
+
+
+
