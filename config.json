@@ -1,5 +1,5 @@
 {
-    "name": "MQTT dev by KDI v111.0",
+    "name": "MQTT dev by KDT",
     "description": "Mục mở rộng hỗ trợ giao tiếp MQTT cho ứng dụng IoT",
     "libs": [
         "umqtt_robust.py",

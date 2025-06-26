@@ -25,12 +25,12 @@
       </value>
     </block>
     <block type="yolobit_mqtt_subscribe_config_down"></block>
-    <!-- <block type="yolobit_mqtt_publish_value">
+    <block type="yolobit_mqtt_publish_value">
       <value name="VALUE">
         <shadow type="math_number">
           <field name="NUM">0</field>
         </shadow>
       </value>
-    </block> -->
+    </block>
   </category>
 </xml>

@@ -95,3 +95,36 @@ Blockly.Python['yolobit_mqtt_subscribe_config_down'] = function(block) {
       code += '    print("Virtual pin V%d → config_id %d" % (pin, cfg))\n';
   return code;
 };
+
+
+
+// 3) (New) Publish value block
+Blockly.Blocks['yolobit_mqtt_publish_value'] = {
+  init: function() {
+    this.appendValueInput('VALUE')
+        .setCheck(['Number','String'])
+        .appendField('gửi giá trị');
+    this.appendDummyInput()
+        .appendField('lên V')
+        .appendField(new Blockly.FieldDropdown([
+          ['V0','0'], ['V1','1'], ['V2','2'], ['V3','3'],
+          ['V4','4'], ['V5','5'], ['V6','6'], ['V7','7'],
+          ['V8','8'], ['V9','9']
+        ]), 'PIN');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(230);
+    this.setTooltip('Gửi giá trị NUMBER lên Virtual pin Vn');
+    this.setHelpUrl('');
+  }
+};
+
+Blockly.Python['yolobit_mqtt_publish_value'] = function(block) {
+  // đảm bảo đã import mqtt
+  Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
+  var valueCode = Blockly.Python.valueToCode(block, 'VALUE', Blockly.Python.ORDER_ATOMIC) || '0';
+  var pin = block.getFieldValue('PIN');
+  // gọi method virtual_write(pin, value, username)
+  var code = `mqtt.virtual_write(${pin}, ${valueCode}, username=TOKEN)\n`;
+  return code;
+};

@@ -83,7 +83,7 @@ class MQTT:
             pass
         self.client.connect()
         self.client.set_callback(self.__on_receive_message)
-        say('Connected to MQTT broker')
+        say('Connected to MQTT broker---------------------------v1')
 
         # 2) Chỉ publish "online" thôi
         online_topic   = f"eoh/chip/{username}/is_online"
@@ -165,8 +165,8 @@ class MQTT:
         full_topic = topic
         self.client.publish(full_topic, message)
         self.last_sent = time.ticks_ms()
-        
-    def virtual_write(self, pin: int, value: Union[int, float, str]) -> None:
+
+    def virtual_write(self, pin: int, value: Union[int, float, str], username: str = '') -> None:
         say(f"virtual_write(pin={pin}, value={value})")
         if pin not in self.virtual_pins:
             say(f"  Pin {pin} chưa được đăng ký")
@@ -174,7 +174,7 @@ class MQTT:
 
         cfg_id = self.virtual_pins[pin]
         # CHỈNH LẠI DÒNG NÀY
-        topic = f"{self.topic_prefix}config/{cfg_id}/value"
+        topic = f"eoh/chip/{username}/config/{cfg_id}/value"
         payload = str(value).encode('ascii')
         say(f" virtual publish → topic={topic}, payload={payload}")
         self.client.publish(topic, payload)
