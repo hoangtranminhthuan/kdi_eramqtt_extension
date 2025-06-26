@@ -12,7 +12,6 @@ class MQTT:
         self.server = ''
         self.username = ''
         self.password = ''
-        self.topic_prefix = ''
         self.wifi_ssid = ''
         self.wifi_password = ''
         self.callbacks = {}
@@ -127,7 +126,7 @@ class MQTT:
         """
         Subscribe an arbitrary topic and register a callback.
         """
-        full_topic = self.topic_prefix + topic
+        full_topic = topic
         self.callbacks[full_topic] = callback
         self.client.subscribe(full_topic)
         say(f"Subscribed to {full_topic}")
@@ -163,7 +162,7 @@ class MQTT:
         now = time.ticks_ms()
         if now - self.last_sent < 1000:
             time.sleep_ms(1000 - (now - self.last_sent))
-        full_topic = self.topic_prefix + topic
+        full_topic = topic
         self.client.publish(full_topic, message)
         self.last_sent = time.ticks_ms()
         
