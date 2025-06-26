@@ -166,9 +166,9 @@ class MQTT:
         self.client.publish(full_topic, message)
         self.last_sent = time.ticks_ms()
 
-    def virtual_write(self, pin: int, value, username: str = '') -> None:
+    def virtual_write(self, pin: int, value: Union[int, float, str], username: str = '') -> None:
         """
-        Publish a value to a virtual pin. Payload is JSON {"v": value}.
+        Publish a value to a virtual pin. Payload is JSON {"value": value}.
         """
         say(f"virtual_write(pin={pin}, value={value}, username={username})")
         if pin not in self.virtual_pins:
@@ -178,26 +178,13 @@ class MQTT:
         cfg_id = self.virtual_pins[pin]
         token = username or getattr(self, 'token', '')
         topic = f"eoh/chip/{username}/config/{cfg_id}/value"
-        
-        # Giữ nguyên format {"v": value} như server expect
-        payload = ujson.dumps({"v": int(value)})
-        
+        # Build JSON payload using ujson
+        # Ensure payload uses integer 'v' key, as required by server
+        payload = f'{{"v": {int(value)}}}'
+
         say(f" virtual publish → topic={topic}, payload={payload}")
-        
-        # Thêm các check cần thiết
-        if not self.client:
-            say("  MQTT client not connected")
-            return
-        
-        # Theo ví dụ server, message có RETAINED flag
-        # QoS=0 như trong ví dụ server (QoS: 0)
-        self.client.publish(topic, payload, retain=True, qos=0)
-        say(f"  Published successfully to {topic}")
-        
-        # Debug: In ra topic và payload để so sánh
-        say(f"  Expected topic format: eoh/chip/{username}/config/[config_id]/value")
-        say(f"  Actual topic: {topic}")
-        say(f"  Config ID for pin {pin}: {cfg_id}")
+        # Publish with retain and QoS=1 to ensure delivery
+        self.client.publish(topic, str(payload), retain=True, qos=1)
 
 mqtt = MQTT()
 
