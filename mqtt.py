@@ -179,7 +179,7 @@ class MQTT:
         topic = f"eoh/chip/{username}/config/{cfg_id}/value"
         # Using ujson exclusively for JSON serialization
         import ujson as json
-        payload = json.dumps({"v": value}).encode('ascii')
+        payload = '{"v": value}'
         say(f" virtual publish → topic={topic}, payload={payload}")
         self.client.publish(topic, payload)
 
