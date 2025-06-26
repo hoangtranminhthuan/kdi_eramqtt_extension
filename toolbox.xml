@@ -24,6 +24,6 @@
         </shadow>
       </value>
     </block>
-    <block type="yolobit_mqtt_virtual_pin_map"></block>
+    <block type="yolobit_mqtt_subscribe_config_down"></block>
   </category>
 </xml>

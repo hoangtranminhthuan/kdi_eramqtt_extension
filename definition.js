@@ -57,28 +57,41 @@ Blockly.Python['yolobit_mqtt_connect_wifi'] = function(block) {
 };
 
 Blockly.Python['yolobit_mqtt_connect_default_servers'] = function(block) {
+  // Import và khởi tạo mqtt như trước
   Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
   var server   = block.getFieldValue('SERVER');
   var username = Blockly.Python.valueToCode(block, 'USERNAME', Blockly.Python.ORDER_ATOMIC);
   var key      = Blockly.Python.valueToCode(block, 'KEY',      Blockly.Python.ORDER_ATOMIC);
-  var code = `mqtt.connect_broker(server='${server}', username=${username}, password=${key})\n`;
+
+  // Sinh biến TOKEN toàn cục để các block khác dùng
+  Blockly.Python.definitions_['mqtt_token'] = 'TOKEN = ' + key;
+
+  // Code connect và subscribe-down luôn trong cùng 1 chỗ (tuỳ chọn)
+  var code  = `mqtt.connect_broker(server='${server}', username=${username}, password=${key})\n`;
   return code;
 };
 
-Blockly.Blocks['yolobit_mqtt_virtual_pin_map'] = {
+
+// 1) Định nghĩa block (không đổi)
+Blockly.Blocks['yolobit_mqtt_subscribe_config_down'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("bản đồ Virtual pin → config_id");
-    this.setOutput(true, null);
+        .appendField("lấy cấu hình xuống và in ra Virtual pin → config_id");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
     this.setColour(230);
-    this.setTooltip("Trả về dict { 'V1':12345, 'V3':67890, … }");
+    this.setTooltip("Subscribe eoh/chip/{TOKEN}/config/down rồi in từng pin và config_id");
     this.setHelpUrl("");
   }
 };
 
-Blockly.Python['yolobit_mqtt_virtual_pin_map'] = function(block) {
-  // Sinh dict comprehension: key 'V<pin>' → value config_id
+// 2) Generator Python (mới)
+Blockly.Python['yolobit_mqtt_subscribe_config_down'] = function(block) {
+  // đảm bảo có import mqtt và biến TOKEN
   Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
-  var code = "{'V%d' % pin: mqtt.virtual_pins[pin] for pin in mqtt.virtual_pins}";
-  return [code, Blockly.Python.ORDER_ATOMIC];
+  Blockly.Python.definitions_['mqtt_token'] = Blockly.Python.definitions_['mqtt_token'] || '';
+  var code  = 'mqtt.subscribe_config_down(TOKEN)\n';
+      code += 'for pin, cfg in mqtt.virtual_pins.items():\n';
+      code += '    print("Virtual pin V%d → config_id %d" % (pin, cfg))\n';
+  return code;
 };
