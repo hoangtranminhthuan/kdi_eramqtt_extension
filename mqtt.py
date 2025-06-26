@@ -76,6 +76,7 @@ class MQTT:
                     password: str = '') -> None:
         client_id = ubinascii.hexlify(machine.unique_id()).decode() \
                     + str(time.ticks_ms())
+        self.topic_prefix = f"eoh/chip/{username}/"
         # 1) Tạo client và connect
         self.client = MQTTClient(client_id, server, port, username, password)
         try:
