@@ -26,14 +26,13 @@
     </block>
     <block type="yolobit_mqtt_subscribe_config_down"></block>
     <block type="yolobit_mqtt_publish_value">
-      <!-- Giá trị mặc định “1” -->
-      <value name="VALUE">
-        <shadow type="text">
-          <field name="TEXT">1</field>
+      <value name="VALUE">…</value>
+      <value name="PIN">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
         </shadow>
       </value>
-      <!-- Dropdown mặc định V0 -->
-      <field name="PIN">0</field>
     </block>
+
   </category>
 </xml>
