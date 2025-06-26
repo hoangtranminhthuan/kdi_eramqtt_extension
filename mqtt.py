@@ -167,7 +167,7 @@ class MQTT:
         self.client.publish(full_topic, message)
         self.last_sent = time.ticks_ms()
         
-    def virtual_write(self, pin: int, value: Union[int, float, str]) -> None:
+    def virtual_write(self, pin: int, value: Union[int, float, str], username: str = '') -> None:
         say(f"virtual_write pin={pin}, value={value}")
         if pin not in self.virtual_pins:
             say(f"Pin {pin} not registered")

@@ -134,6 +134,6 @@ Blockly.Python['yolobit_mqtt_publish_value'] = function(block) {
   var valueCode = Blockly.Python.valueToCode(block, 'VALUE', Blockly.Python.ORDER_ATOMIC) || '0';
   var pin = block.getFieldValue('PIN');
   // gọi method virtual_write(pin, value)
-  var code = `mqtt.virtual_write(${pin}, ${valueCode})\n`;
+  var code = `mqtt.virtual_write(${pin}, ${valueCode}, ${username})\n`;
   return code;
 };
