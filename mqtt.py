@@ -23,6 +23,12 @@ class MQTT:
     def __on_receive_message(self, topic: bytes, msg: bytes) -> None:
         topic_str = topic.decode('ascii')
         payload   = msg.decode('ascii')
+        print(f"[MQTT] Received message → topic='{topic_str}', payload='{payload}'")
+        try:
+            data = ujson.loads(payload)
+        except Exception as e:
+            print(f"[MQTT]  JSON decode error: {e}")
+            return
         if callable(self.callbacks.get(topic_str)):
             self.callbacks[topic_str](payload)
 
@@ -138,6 +144,7 @@ class MQTT:
         Should be called periodically.
         Checks for incoming messages and handles reconnection logic.
         """
+        print("[MQTT]   check_message()")
         if not self.client:
             return
         if not self.wifi_connected():
@@ -165,17 +172,14 @@ class MQTT:
         Gửi value lên topic:
           eoh/chip/{TOKEN}/config/{config_id}/value
         """
-        # Lấy config_id đã lưu trước đó
-        cfg = self.virtual_pins.get(pin)
-        if cfg is None:
-            return  # pin chưa được cấu hình xuống
-
-        # Dùng username (đã set = TOKEN) để build topic
-        topic = f"eoh/chip/{self.username}/config/{cfg}/value"
-        # Gói payload JSON
-        payload = ujson.dumps({"v": value})
-        # Dùng luôn publish() đã có để gửi
-        self.publish(topic, payload)
+        print(f"[MQTT]   virtual_write(pin={pin}, value={value})")
+        if pin not in self.virtual_pins:
+            print(f"[MQTT]  Pin {pin} chưa được subscribe/configure")
+            return
+        topic = f"{self.username}/virtual/{pin}/update"
+        payload = str(value).encode('ascii')
+        print(f"[MQTT]   Publishing to topic={topic}, payload={payload}")
+        self.client.publish(topic, payload)
 
 
 mqtt = MQTT()
