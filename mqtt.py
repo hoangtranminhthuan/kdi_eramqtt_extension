@@ -178,7 +178,7 @@ class MQTT:
         cfg_id = self.virtual_pins[pin]
         topic = f"eoh/chip/{username}/config/{cfg_id}/value"
         # Using ujson exclusively for JSON serialization
-        payload = '{"v": ' + str(value) + '}'
+        payload = f'{{"v":{value}}}'.encode('ascii')
         say(f" virtual publish → topic={topic}, payload={payload}")
         self.client.publish(topic, payload,  retain=True, qos=1)
 
