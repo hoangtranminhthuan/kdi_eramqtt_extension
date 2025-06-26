@@ -63,14 +63,10 @@ class MQTT:
     def wifi_connected(self) -> bool:
         return self.station.isconnected()
 
-    def connect_broker(self,
-                    server: str = 'mqtt1.eoh.io',
-                    port:   int = 1883,
-                    username: str = '',
-                    password: str = '') -> None:
-        client_id = ubinascii.hexlify(machine.unique_id()).decode() \
-                    + str(time.ticks_ms())
-        # 1) Tạo client và connect
+
+    def connect_broker(self, server: str = 'mqtt1.eoh.io', port: int = 1883,
+                       username: str = '', password: str = '') -> None:
+        client_id = ubinascii.hexlify(machine.unique_id()).decode() + str(time.ticks_ms())
         self.client = MQTTClient(client_id, server, port, username, password)
         try:
             self.client.disconnect()
@@ -78,14 +74,15 @@ class MQTT:
             pass
         self.client.connect()
         self.client.set_callback(self.__on_receive_message)
-        say('Connected to MQTT broker')
 
-        # 2) Chỉ publish "online" thôi
-        online_topic   = f"eoh/chip/{username}/is_online"
-        online_payload = '{"ol":1}'
-        # retain=True để broker lưu trạng thái online
-        self.client.publish(online_topic, online_payload, retain=True, qos=1)
-        say(f'Announced online on {online_topic}')
+        # Thiết lập prefix để các lần publish chỉ cần pass suffix
+        self.username     = username
+        self.topic_prefix = f"eoh/chip/{username}"
+
+        # Announce online
+        self.client.publish(f"{self.topic_prefix}/is_online",
+                            '{"ol":1}', retain=True, qos=1)
+        say(f'Announced online on {self.topic_prefix}/is_online')
 
 
     def subscribe_config_down(self, token: str, callback=None) -> None:
@@ -160,22 +157,23 @@ class MQTT:
         self.client.publish(full_topic, message)
         self.last_sent = time.ticks_ms()
         
+
     def virtual_write(self, pin: int, value: int, qos: int = 1) -> None:
         """
-        Gửi value lên topic:
+        Gửi giá trị 'value' lên Virtual pin 'pin' đã được cấu hình:
           eoh/chip/{TOKEN}/config/{config_id}/value
         """
-        # Lấy config_id đã lưu trước đó
         cfg = self.virtual_pins.get(pin)
         if cfg is None:
-            return  # pin chưa được cấu hình xuống
+            # Chưa có config_id cho pin này
+            return
 
-        # Dùng username (đã set = TOKEN) để build topic
-        topic = f"eoh/chip/{self.username}/config/{cfg}/value"
-        # Gói payload JSON
+        # Chỉ pass phần suffix, publish() sẽ tự nối prefix
+        suffix  = f"/config/{cfg}/value"
         payload = ujson.dumps({"v": value})
-        # Dùng luôn publish() đã có để gửi
-        self.publish(topic, payload)
+        # Dùng publish() để throttle, reuse client.publish
+        self.publish(suffix, payload)  # retain=False, qos mặc định của publish()
+        say(f"Published V{pin} → {value} on {self.topic_prefix}{suffix}")
 
 
 mqtt = MQTT()
