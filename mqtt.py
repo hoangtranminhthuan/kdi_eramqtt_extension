@@ -87,7 +87,7 @@ class MQTT:
         say('Connected to MQTT broker')
         
         # password chính là token của bạn
-        self.topic_prefix = f"eoh/chip/{password}/"
+        self.topic_prefix = f"eoh/chip/{password}"
         say(f"Using topic prefix: {self.topic_prefix}")
 
         # 2) Chỉ publish "online" thôi
@@ -103,7 +103,7 @@ class MQTT:
         Subscribe topic eoh/chip/{token}/down.
         If no callback provided, use internal handler to populate virtual_pins.
         """
-        topic = f"eoh/chip/{token}/down"
+        topic = f"{self.topic_prefix}/down"
         cb = callback or self._handle_config_down
         self.on_receive_message(topic, cb)
 
