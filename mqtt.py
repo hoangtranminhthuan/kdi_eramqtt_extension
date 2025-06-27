@@ -161,11 +161,11 @@ class MQTT:
         if not self.client:
             return
         now = time.ticks_ms()
-        if now - self.last_sent < 1000:
-            time.sleep_ms(1000 - (now - self.last_sent))
+        # if now - self.last_sent < 1000:
+        #     time.sleep_ms(1000 - (now - self.last_sent))
         full_topic = topic
         self.client.publish(full_topic, message)
-        self.last_sent = time.ticks_ms()
+        # self.last_sent = time.ticks_ms()
 
     def virtual_write(self, pin: int, value: Union[int, float, str], username: str = '') -> None:
         """
