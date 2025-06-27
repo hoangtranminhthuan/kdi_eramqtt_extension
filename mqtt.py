@@ -171,7 +171,7 @@ class MQTT:
         """
         Publish a value to a virtual pin. Payload is JSON {"value": value}.
         """
-        say(f"virtual_write(pin={pin}, value={value}, username={username})")
+        # say(f"virtual_write(pin={pin}, value={value}, username={username})")
         if pin not in self.virtual_pins:
             say(f"  Pin {pin} chưa được đăng ký")
             return
