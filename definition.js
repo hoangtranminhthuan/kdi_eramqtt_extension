@@ -146,6 +146,6 @@ Blockly.Blocks['yolobit_mqtt_subscribe_all_virtual_pins'] = {
 Blockly.Python['yolobit_mqtt_subscribe_all_virtual_pins'] = function(block) {
   Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
   Blockly.Python.definitions_['mqtt_token'] = Blockly.Python.definitions_['mqtt_token'] || '';
-  var code  = 'mqtt.subscribe_all_virtual_pins(TOKEN)\n';
+  var code  = 'mqtt.subscribe_all_virtual_pins()\n';
   return code;
 };
