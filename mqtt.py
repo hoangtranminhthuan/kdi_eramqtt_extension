@@ -92,6 +92,8 @@ class MQTT:
         # retain=True để broker lưu trạng thái online
         self.client.publish(online_topic, online_payload, retain=True, qos=1)
         say(f'Announced online on {online_topic}')
+        self.subscribe_config_down(self.username)
+
 
 
     def subscribe_config_down(self, token: str, callback=None) -> None:
