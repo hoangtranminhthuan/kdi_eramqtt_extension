@@ -84,7 +84,7 @@ class MQTT:
             pass
         self.client.connect()
         self.client.set_callback(self.__on_receive_message)
-        say('Connected to MQTT broker---------------------------v0')
+        say('Connected to MQTT broker---------------------------v1')
 
         # 2) Chỉ publish "online" thôi
         online_topic   = f"eoh/chip/{username}/is_online"
@@ -242,6 +242,10 @@ class MQTT:
         """
         data = self.virtual_pin_values.get(pin, None)
         return data.get('value', None) if data else None    
+    
+    def subscribe_and_get(self, pin: int, token: str) -> any:
+        self.subscribe_virtual_pin(pin, token)
+        return self.get_virtual_pin_simple_value(pin)
 
 mqtt = MQTT()
 
