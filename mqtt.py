@@ -18,6 +18,7 @@ class MQTT:
         self.last_sent = 0
         # mapping pin_number → config_id
         self.virtual_pins = {}
+        self.virtual_pin_values = {}
 
     def __on_receive_message(self, topic: bytes, msg: bytes) -> None:
         topic_str = topic.decode('ascii')
@@ -83,7 +84,7 @@ class MQTT:
             pass
         self.client.connect()
         self.client.set_callback(self.__on_receive_message)
-        say('Connected to MQTT broker---------------------------v9')
+        say('Connected to MQTT broker---------------------------v0')
 
         # 2) Chỉ publish "online" thôi
         online_topic   = f"eoh/chip/{username}/is_online"
