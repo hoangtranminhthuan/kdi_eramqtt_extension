@@ -18,11 +18,6 @@
           <field name="TEXT"></field>
         </shadow>
       </value>
-      <value name="KEY">
-        <shadow type="text">
-          <field name="TEXT"></field>
-        </shadow>
-      </value>
     </block>
     <block type="yolobit_mqtt_subscribe_config_down"></block>
     <block type="yolobit_mqtt_publish_value">

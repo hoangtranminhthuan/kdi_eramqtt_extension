@@ -23,7 +23,7 @@ Blockly.Blocks["yolobit_mqtt_connect_default_servers"] = {
       colour: "#e65722",
       nextStatement: null,
       tooltip: "Kết nối đến server MQTT được chọn",
-      message0: "kết nối đến server %1 với username %2 key %3 %4",
+      message0: "kết nối đến server %1 với token %2 %3",
       previousStatement: null,
       args0: [
         {
@@ -33,14 +33,14 @@ Blockly.Blocks["yolobit_mqtt_connect_default_servers"] = {
             ["EOH", "mqtt1.eoh.io"]
           ],
         },
-        { type: "input_value", name: "USERNAME", check: "String" },
-        { type: "input_value", name: "KEY", check: "String" },
+        { type: "input_value", name: "USERNAME", check: "String" }, // chỉ còn username (token)
         { type: "input_dummy" },
       ],
       helpUrl: "",
     });
   },
 };
+
 
 'use strict';
 
@@ -57,20 +57,19 @@ Blockly.Python['yolobit_mqtt_connect_wifi'] = function(block) {
 };
 
 Blockly.Python['yolobit_mqtt_connect_default_servers'] = function(block) {
-  // Import và khởi tạo mqtt như trước
   Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
   var server   = block.getFieldValue('SERVER');
   var username = Blockly.Python.valueToCode(block, 'USERNAME', Blockly.Python.ORDER_ATOMIC);
-  var key      = Blockly.Python.valueToCode(block, 'KEY',      Blockly.Python.ORDER_ATOMIC);
 
-  // Sinh biến TOKEN toàn cục để các block khác dùng
-  Blockly.Python.definitions_['mqtt_token'] = 'TOKEN = ' + key;
+  // TOKEN lấy từ username (token)
+  Blockly.Python.definitions_['mqtt_token'] = 'TOKEN = ' + username;
 
-  // Code connect và subscribe-down luôn trong cùng 1 chỗ (tuỳ chọn)
-  var code  = `mqtt.connect_broker(server='${server}', username=${username}, password=${key})\n`;
-      code += 'time.sleep(3)\n'; // Đợi 5 giây để kết nối ổn định
+  // Dùng username làm password luôn
+  var code  = `mqtt.connect_broker(server='${server}', username=${username}, password=${username})\n`;
+      code += 'time.sleep(2)\n';
   return code;
 };
+
 
 // 1) Định nghĩa block (không đổi)
 Blockly.Blocks['yolobit_mqtt_subscribe_config_down'] = {
