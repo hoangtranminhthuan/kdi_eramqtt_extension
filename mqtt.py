@@ -186,10 +186,23 @@ class MQTT:
         # Publish with retain and QoS=1 to ensure delivery
         self.client.publish(topic, str(payload), retain=True, qos=1)
         
+    def subscribe_all_virtual_pins(self, token: str, callback=None) -> None:
+        """
+        Subscribe tất cả topic eoh/chip/{token}/virtual_pin/{pin_number}
+        Với pin_number lấy từ self.virtual_pins.
+        Khi nhận message thì print toàn bộ value.
+        """
+        def default_cb(msg):
+            print("Virtual pin value received:", msg)
+        cb = callback or default_cb
+
+        for pin in self.virtual_pins:
+            topic = f"eoh/chip/{token}/virtual_pin/{pin}"
+            self.on_receive_message(topic, cb)
 
 
-            
-    
+                
+        
 
 mqtt = MQTT()
 

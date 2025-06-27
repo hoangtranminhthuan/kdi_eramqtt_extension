@@ -32,6 +32,7 @@
         </shadow>
       </value>
     </block>
-    <!-- <block type="yolobit_mqtt_read_value"></block> -->
+    <block type="yolobit_mqtt_subscribe_all_virtual_pins"></block>
+
   </category>
 </xml>
