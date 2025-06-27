@@ -129,3 +129,80 @@ Blockly.Python['yolobit_mqtt_publish_value'] = function(block) {
   return code;
 };
 
+// Thêm vào definition.js
+
+// Block để subscribe virtual pin
+Blockly.Blocks['yolobit_mqtt_subscribe_virtual_pin'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField('theo dõi Virtual pin')
+        .appendField(new Blockly.FieldDropdown([
+          ['V0','0'], ['V1','1'], ['V2','2'], ['V3','3'],
+          ['V4','4'], ['V5','5'], ['V6','6'], ['V7','7'],
+          ['V8','8'], ['V9','9']
+        ]), 'PIN');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(230);
+    this.setTooltip('Subscribe và theo dõi dữ liệu từ Virtual pin');
+    this.setHelpUrl('');
+  }
+};
+
+// Generator Python cho subscribe virtual pin
+Blockly.Python['yolobit_mqtt_subscribe_virtual_pin'] = function(block) {
+  Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
+  var pin = block.getFieldValue('PIN');
+  var code = `mqtt.subscribe_virtual_pin(${pin}, TOKEN)\n`;
+  return code;
+};
+
+// Block để đọc giá trị từ virtual pin
+Blockly.Blocks['yolobit_mqtt_read_virtual_pin_value'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField('giá trị từ V')
+        .appendField(new Blockly.FieldDropdown([
+          ['V0','0'], ['V1','1'], ['V2','2'], ['V3','3'],
+          ['V4','4'], ['V5','5'], ['V6','6'], ['V7','7'],
+          ['V8','8'], ['V9','9']
+        ]), 'PIN');
+    this.setOutput(true, 'Number');
+    this.setColour(230);
+    this.setTooltip('Lấy giá trị mới nhất từ Virtual pin');
+    this.setHelpUrl('');
+  }
+};
+
+// Generator Python cho đọc giá trị virtual pin
+Blockly.Python['yolobit_mqtt_read_virtual_pin_value'] = function(block) {
+  Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
+  var pin = block.getFieldValue('PIN');
+  var code = `mqtt.get_virtual_pin_simple_value(${pin})`;
+  return [code, Blockly.Python.ORDER_FUNCTION_CALL];
+};
+
+// Block để đọc đầy đủ thông tin từ virtual pin (bao gồm trigger_id)
+Blockly.Blocks['yolobit_mqtt_read_virtual_pin_full'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField('thông tin đầy đủ từ V')
+        .appendField(new Blockly.FieldDropdown([
+          ['V0','0'], ['V1','1'], ['V2','2'], ['V3','3'],
+          ['V4','4'], ['V5','5'], ['V6','6'], ['V7','7'],
+          ['V8','8'], ['V9','9']
+        ]), 'PIN');
+    this.setOutput(true, null);
+    this.setColour(230);
+    this.setTooltip('Lấy thông tin đầy đủ (value, trigger_id, timestamp) từ Virtual pin');
+    this.setHelpUrl('');
+  }
+};
+
+// Generator Python cho đọc thông tin đầy đủ
+Blockly.Python['yolobit_mqtt_read_virtual_pin_full'] = function(block) {
+  Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
+  var pin = block.getFieldValue('PIN');
+  var code = `mqtt.get_virtual_pin_value(${pin})`;
+  return [code, Blockly.Python.ORDER_FUNCTION_CALL];
+};

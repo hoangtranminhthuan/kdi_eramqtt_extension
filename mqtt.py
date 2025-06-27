@@ -186,10 +186,61 @@ class MQTT:
         # Publish with retain and QoS=1 to ensure delivery
         self.client.publish(topic, str(payload), retain=True, qos=1)
         
-
-
+    def subscribe_virtual_pin(self, pin: int, token: str, callback=None) -> None:
+        """
+        Subscribe to topic eoh/chip/{token}/virtual_pin/{pin_number}
+        to receive data from virtual pin.
+        """
+        topic = f"eoh/chip/{token}/virtual_pin/{pin}"
+        
+        if callback is None:
+            # Tạo callback wrapper để lưu pin number
+            def pin_callback(msg):
+                self._handle_virtual_pin_data(msg, pin)
+            cb = pin_callback
+        else:
+            cb = callback
             
+        self.on_receive_message(topic, cb)
+        say(f"Subscribed to virtual pin V{pin}")
+
+    def _handle_virtual_pin_data(self, msg: str, pin: int = None) -> None:
+        """
+        Default handler for virtual pin data messages.
+        Parses JSON and stores the received value.
+        Expected format: {"value": 5, "trigger_id": 2509389}
+        """
+        try:
+            data = ujson.loads(msg)
+            value = data.get('value', 'Unknown')
+            trigger_id = data.get('trigger_id', None)
+            print(f"[Virtual Pin V{pin}] Received value: {value}, trigger_id: {trigger_id}")
+            
+            # Lưu giá trị vào dict nếu có pin number
+            if pin is not None:
+                self.virtual_pin_values[pin] = {
+                    "value": value, 
+                    "trigger_id": trigger_id,
+                    "timestamp": time.ticks_ms()
+                }
+        except Exception as e:
+            print(f"[Virtual Pin] JSON decode error: {e}")
+            print(f"[Virtual Pin] Raw message: {msg}")
+
+    def get_virtual_pin_value(self, pin: int) -> dict:
+        """
+        Get the latest value received from a virtual pin.
+        Returns dict with 'value', 'trigger_id', 'timestamp' or None if no data.
+        """
+        return self.virtual_pin_values.get(pin, None)
     
+    def get_virtual_pin_simple_value(self, pin: int) -> any:
+        """
+        Get only the value (not trigger_id/timestamp) from a virtual pin.
+        Returns the value or None if no data.
+        """
+        data = self.virtual_pin_values.get(pin, None)
+        return data.get('value', None) if data else None    
 
 mqtt = MQTT()
 

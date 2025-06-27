@@ -32,6 +32,9 @@
         </shadow>
       </value>
     </block>
-    <!-- <block type="yolobit_mqtt_read_value"></block> -->
+        <!-- Blocks mới cho virtual pin subscribe -->
+    <block type="yolobit_mqtt_subscribe_virtual_pin"></block>
+    <block type="yolobit_mqtt_read_virtual_pin_value"></block>
+    <block type="yolobit_mqtt_read_virtual_pin_full"></block>
   </category>
 </xml>
