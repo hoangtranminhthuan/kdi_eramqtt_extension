@@ -83,7 +83,7 @@ class MQTT:
             pass
         self.client.connect()
         self.client.set_callback(self.__on_receive_message)
-        say('Connected to MQTT broker---------------------------v2')
+        say('Connected to MQTT broker---------------------------v1')
 
         # 2) Chỉ publish "online" thôi
         online_topic   = f"eoh/chip/{username}/is_online"
@@ -107,8 +107,9 @@ class MQTT:
         Subscribe tất cả topic eoh/chip/{self.username}/virtual_pin/{pin_number}
         Với pin_number lấy từ self.virtual_pins.
         """
-        def default_virtual_cb(msg):
+        def default_virtual_cb(topic, msg):
             print("Virtual pin value received:", msg)
+
         token = self.username or ''
         for pin in self.virtual_pins:
             topic = f"eoh/chip/{token}/virtual_pin/{pin}"
