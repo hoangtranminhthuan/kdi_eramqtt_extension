@@ -129,23 +129,3 @@ Blockly.Python['yolobit_mqtt_publish_value'] = function(block) {
   return code;
 };
 
-// 1) Định nghĩa block mới
-Blockly.Blocks['yolobit_mqtt_subscribe_all_virtual_pins'] = {
-  init: function() {
-    this.appendDummyInput()
-        .appendField("lấy giá trị tất cả Virtual pin và in ra");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(230);
-    this.setTooltip("Subscribe eoh/chip/{TOKEN}/virtual_pin/{pin} cho tất cả pin đã có rồi in ra value nhận được");
-    this.setHelpUrl("");
-  }
-};
-
-// 2) Generator Python
-Blockly.Python['yolobit_mqtt_subscribe_all_virtual_pins'] = function(block) {
-  Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
-  Blockly.Python.definitions_['mqtt_token'] = Blockly.Python.definitions_['mqtt_token'] || '';
-  var code  = 'mqtt.subscribe_all_virtual_pins()\n';
-  return code;
-};

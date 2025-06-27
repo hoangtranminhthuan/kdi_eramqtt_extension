@@ -83,7 +83,7 @@ class MQTT:
             pass
         self.client.connect()
         self.client.set_callback(self.__on_receive_message)
-        say('Connected to MQTT broker---------------------------v2')
+        say('Connected to MQTT broker---------------------------v9')
 
         # 2) Chỉ publish "online" thôi
         online_topic   = f"eoh/chip/{username}/is_online"
@@ -101,20 +101,6 @@ class MQTT:
         topic = f"eoh/chip/{token}/down"
         cb = callback or self._handle_config_down
         self.on_receive_message(topic, cb)
-        
-    def subscribe_all_virtual_pins(self):
-        if not hasattr(self, 'subscribed_topics'):
-            self.subscribed_topics = set()
-        def default_virtual_cb(topic, msg):
-            print("Virtual pin value received:", msg)
-        token = self.username or ''
-        for pin in self.virtual_pins:
-            topic_str = f"eoh/chip/{token}/virtual_pin/{pin}"
-            if topic_str not in self.subscribed_topics:
-                self.on_receive_message(topic_str, default_virtual_cb)
-                self.subscribed_topics.add(topic_str)
-
-
 
     def _handle_config_down(self, msg: str) -> None:
         """
@@ -135,7 +121,6 @@ class MQTT:
                 cfg_id = int(v['config_id'])
                 self.virtual_pins[pin] = cfg_id
         print("Config received, pin→config_id:", self.virtual_pins)
-        self.subscribe_all_virtual_pins()
 
     def on_receive_message(self, topic: str, callback) -> None:
         """
@@ -143,12 +128,8 @@ class MQTT:
         """
         full_topic = topic
         self.callbacks[full_topic] = callback
-        try:
-            self.client.subscribe(full_topic)
-            say(f"Subscribed to {full_topic}")
-        except AssertionError:
-            say(f"Topic {full_topic} đã subscribe trước đó, bỏ qua.")
-
+        self.client.subscribe(full_topic)
+        say(f"Subscribed to {full_topic}")
 
     def resubscribe(self) -> None:
         """
