@@ -68,6 +68,9 @@ Blockly.Python['yolobit_mqtt_connect_default_servers'] = function(block) {
 
   // Code connect và subscribe-down luôn trong cùng 1 chỗ (tuỳ chọn)
   var code  = `mqtt.connect_broker(server='${server}', username=${username}, password=${key})\n`;
+      code += 'mqtt.subscribe_config_down(TOKEN)\n';
+      code += 'for pin, cfg in mqtt.virtual_pins.items():\n';
+      code += '    print("Virtual pin V%d → config_id %d" % (pin, cfg))\n';
   return code;
 };
 
