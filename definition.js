@@ -59,6 +59,8 @@ Blockly.Python['yolobit_mqtt_connect_wifi'] = function(block) {
 Blockly.Python['yolobit_mqtt_connect_default_servers'] = function(block) {
   // Import và khởi tạo mqtt như trước
   Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
+  Blockly.Python.definitions_['import_time'] = 'import time';
+
   var server   = block.getFieldValue('SERVER');
   var username = Blockly.Python.valueToCode(block, 'USERNAME', Blockly.Python.ORDER_ATOMIC);
   var key      = Blockly.Python.valueToCode(block, 'KEY',      Blockly.Python.ORDER_ATOMIC);
