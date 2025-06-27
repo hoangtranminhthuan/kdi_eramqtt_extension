@@ -83,7 +83,7 @@ class MQTT:
             pass
         self.client.connect()
         self.client.set_callback(self.__on_receive_message)
-        say('Connected to MQTT broker---------------------------v0')
+        say('Connected to MQTT broker---------------------------v2')
 
         # 2) Chỉ publish "online" thôi
         online_topic   = f"eoh/chip/{username}/is_online"
@@ -101,6 +101,18 @@ class MQTT:
         topic = f"eoh/chip/{token}/down"
         cb = callback or self._handle_config_down
         self.on_receive_message(topic, cb)
+        
+    def subscribe_all_virtual_pins(self):
+        """
+        Subscribe tất cả topic eoh/chip/{self.username}/virtual_pin/{pin_number}
+        Với pin_number lấy từ self.virtual_pins.
+        """
+        def default_virtual_cb(msg):
+            print("Virtual pin value received:", msg)
+        token = self.username or ''
+        for pin in self.virtual_pins:
+            topic = f"eoh/chip/{token}/virtual_pin/{pin}"
+            self.on_receive_message(topic, default_virtual_cb)
 
     def _handle_config_down(self, msg: str) -> None:
         """
@@ -121,6 +133,7 @@ class MQTT:
                 cfg_id = int(v['config_id'])
                 self.virtual_pins[pin] = cfg_id
         print("Config received, pin→config_id:", self.virtual_pins)
+        self.subscribe_all_virtual_pins()
 
     def on_receive_message(self, topic: str, callback) -> None:
         """
@@ -186,23 +199,10 @@ class MQTT:
         # Publish with retain and QoS=1 to ensure delivery
         self.client.publish(topic, str(payload), retain=True, qos=1)
         
-    def subscribe_all_virtual_pins(self, token: str, callback=None) -> None:
-        """
-        Subscribe tất cả topic eoh/chip/{token}/virtual_pin/{pin_number}
-        Với pin_number lấy từ self.virtual_pins.
-        Khi nhận message thì print toàn bộ value.
-        """
-        def default_cb(msg):
-            print("Virtual pin value received:", msg)
-        cb = callback or default_cb
-
-        for pin in self.virtual_pins:
-            topic = f"eoh/chip/{token}/virtual_pin/{pin}"
-            self.on_receive_message(topic, cb)
 
 
-                
-        
+            
+    
 
 mqtt = MQTT()
 
