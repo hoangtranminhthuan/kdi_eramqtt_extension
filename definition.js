@@ -129,23 +129,3 @@ Blockly.Python['yolobit_mqtt_publish_value'] = function(block) {
   return code;
 };
 
-Blockly.Blocks['yolobit_mqtt_subscribe_virtual_value'] = {
-  init: function() {
-    this.appendDummyInput()
-        .appendField("đăng ký nhận giá trị từ các chân ảo (Vx)");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(230);
-    this.setTooltip("Subscribe eoh/chip/{TOKEN}/virtual_pin/{pin} rồi in giá trị khi có dữ liệu");
-    this.setHelpUrl("");
-  }
-};
-
-Blockly.Python['yolobit_mqtt_subscribe_virtual_value'] = function(block) {
-  Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
-  Blockly.Python.definitions_['mqtt_token'] = Blockly.Python.definitions_['mqtt_token'] || '';
-  var code  = 'mqtt.subscribe_virtual_value(TOKEN)\n';
-      code += 'for pin, val in mqtt.virtual_values.items():\n';
-      code += '    print("Giá trị từ V%d → %s" % (pin, val))\n';
-  return code;
-};

@@ -18,7 +18,6 @@ class MQTT:
         self.last_sent = 0
         # mapping pin_number → config_id
         self.virtual_pins = {}
-        self.virtual_values = {}
 
     def __on_receive_message(self, topic: bytes, msg: bytes) -> None:
         topic_str = topic.decode('ascii')
@@ -84,7 +83,7 @@ class MQTT:
             pass
         self.client.connect()
         self.client.set_callback(self.__on_receive_message)
-        say('Connected to MQTT broker---------------------------v11')
+        say('Connected to MQTT broker---------------------------v9')
 
         # 2) Chỉ publish "online" thôi
         online_topic   = f"eoh/chip/{username}/is_online"
@@ -122,34 +121,6 @@ class MQTT:
                 cfg_id = int(v['config_id'])
                 self.virtual_pins[pin] = cfg_id
         print("Config received, pin→config_id:", self.virtual_pins)
-        
-    def subscribe_virtual_value(self, token: str) -> None:
-        """
-        Subscribe to value topic for all registered virtual pins.
-        Example topic: eoh/chip/{token}/virtual_pin/{pin}
-        """
-        print("[MQTT] Bắt đầu đăng ký topic giá trị cho các virtual pin:")
-        print("virtual_pins hiện tại:", self.virtual_pins)
-
-        for pin in self.virtual_pins:
-            topic = f"eoh/chip/{token}/virtual_pin/{pin}"
-            print(f"  → Subscribing to topic: {topic}")
-
-            def make_callback(p):
-                def cb(msg: str):
-                    print(f"[MQTT] Nhận được từ V{p}: raw = {msg}")
-                    try:
-                        data = ujson.loads(msg)
-                        value = data.get("value", None)
-                        trigger_id = data.get("trigger_id", None)
-                        self.virtual_values[p] = value
-                        print(f"[MQTT] V{p} → value = {value}, trigger_id = {trigger_id}")
-                    except Exception as e:
-                        print(f"[MQTT] Error parsing value for V{p}: {e}")
-                return cb
-
-            self.on_receive_message(topic, make_callback(pin))
-
 
     def on_receive_message(self, topic: str, callback) -> None:
         """
