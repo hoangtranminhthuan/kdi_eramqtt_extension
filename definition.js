@@ -30,7 +30,7 @@ Blockly.Blocks["yolobit_mqtt_connect_default_servers"] = {
           type: "field_dropdown",
           name: "SERVER",
           options: [
-            ["EOH", "mqtt1.eoh.io"]
+            ["E-Ra Platform", "mqtt1.eoh.io"]
           ],
         },
         { type: "input_value", name: "USERNAME", check: "String" },
