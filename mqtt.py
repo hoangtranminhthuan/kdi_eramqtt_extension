@@ -83,7 +83,7 @@ class MQTT:
             pass
         self.client.connect()
         self.client.set_callback(self.__on_receive_message)
-        say('Connected to MQTT broker---------------------------v3')
+        say('Connected to MQTT broker---------------------------v0')
 
         # 2) Chỉ publish "online" thôi
         online_topic   = f"eoh/chip/{username}/is_online"
@@ -103,17 +103,18 @@ class MQTT:
         self.on_receive_message(topic, cb)
         
     def subscribe_all_virtual_pins(self):
+        if not hasattr(self, 'subscribed_topics'):
+            self.subscribed_topics = set()
         def default_virtual_cb(topic, msg):
             print("Virtual pin value received:", msg)
         token = self.username or ''
         for pin in self.virtual_pins:
             topic_str = f"eoh/chip/{token}/virtual_pin/{pin}"
-            # Không cần check self.callbacks nữa, cứ subscribe, nếu trùng thì except
-            try:
+            if topic_str not in self.subscribed_topics:
                 self.on_receive_message(topic_str, default_virtual_cb)
-            except AssertionError:
-                # Nếu bị lỗi do đã subscribe, thì bỏ qua
-                say(f"Topic {topic_str} đã subscribe rồi, bỏ qua.")
+                self.subscribed_topics.add(topic_str)
+
+
 
 
     def _handle_config_down(self, msg: str) -> None:
