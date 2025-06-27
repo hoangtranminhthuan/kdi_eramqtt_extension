@@ -84,7 +84,7 @@ class MQTT:
             pass
         self.client.connect()
         self.client.set_callback(self.__on_receive_message)
-        say('Connected to MQTT broker---------------------------v5')
+        say('Connected to MQTT broker---------------------------v6')
 
         # 2) Chỉ publish "online" thôi
         online_topic   = f"eoh/chip/{username}/is_online"
@@ -233,6 +233,7 @@ class MQTT:
         Get the latest value received from a virtual pin.
         Returns dict with 'value', 'trigger_id', 'timestamp' or None if no data.
         """
+        self.subscribe_virtual_pin(pin, self.username)  # Ensure subscription
         return self.virtual_pin_values.get(pin, None)
     
     def get_virtual_pin_simple_value(self, pin: int) -> any:
@@ -240,6 +241,7 @@ class MQTT:
         Get only the value (not trigger_id/timestamp) from a virtual pin.
         Returns the value or None if no data.
         """
+        self.subscribe_virtual_pin(pin, self.username) 
         data = self.virtual_pin_values.get(pin, None)
         return data.get('value', None) if data else None    
 

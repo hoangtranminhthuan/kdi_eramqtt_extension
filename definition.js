@@ -178,9 +178,8 @@ Blockly.Blocks['yolobit_mqtt_read_virtual_pin_value'] = {
 Blockly.Python['yolobit_mqtt_read_virtual_pin_value'] = function(block) {
   Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
   var pin = block.getFieldValue('PIN');
-  var code = `mqtt.subscribe_virtual_pin(${pin}, TOKEN)\n`;
-      code += `mqtt.get_virtual_pin_simple_value(${pin})`;
-      
+  var code = `mqtt.get_virtual_pin_simple_value(${pin})`;
+
   return [code, Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
@@ -205,7 +204,6 @@ Blockly.Python['yolobit_mqtt_read_virtual_pin_value'] = function(block) {
 // Blockly.Python['yolobit_mqtt_read_virtual_pin_full'] = function(block) {
 //   Blockly.Python.definitions_['import_mqtt'] = 'from mqtt import *';
 //   var pin = block.getFieldValue('PIN');
-//   var code = `mqtt.subscribe_virtual_pin(${pin}, TOKEN)\n`;
-//       code += `mqtt.get_virtual_pin_value(${pin})`;
+//   var code = `mqtt.get_virtual_pin_value(${pin})`;
 //   return [code, Blockly.Python.ORDER_FUNCTION_CALL];
 // };
