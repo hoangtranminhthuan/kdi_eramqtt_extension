@@ -4,7 +4,7 @@ Blockly.Blocks["yolobit_mqtt_connect_wifi"] = {
       colour: "#e65722",
       nextStatement: null,
       tooltip: "Kết nối vào mạng WiFi",
-      message0: "kết nối WiFi %1 %2 mật khẩu %3 %4",
+      message0: "Kết nối WiFi %1 %2 mật khẩu %3 %4",
       previousStatement: null,
       args0: [
         { type: "input_dummy" },
@@ -23,14 +23,14 @@ Blockly.Blocks["yolobit_mqtt_connect_default_servers"] = {
       colour: "#e65722",
       nextStatement: null,
       tooltip: "Kết nối đến server MQTT được chọn",
-      message0: "kết nối đến server %1 với token %2 %3",
+      message0: "Kết nối đến server %1 với Token %2 %3",
       previousStatement: null,
       args0: [
         {
           type: "field_dropdown",
           name: "SERVER",
           options: [
-            ["EOH", "mqtt1.eoh.io"]
+            ["ER-a", "mqtt1.eoh.io"]
           ],
         },
         { type: "input_value", name: "USERNAME", check: "String" }, // chỉ còn username (token)
@@ -75,7 +75,7 @@ Blockly.Python['yolobit_mqtt_connect_default_servers'] = function(block) {
 Blockly.Blocks['yolobit_mqtt_subscribe_config_down'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("lấy cấu hình các Pin xuống");
+        .appendField("Cập nhật thông tin từ server");
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setColour(230);
@@ -100,9 +100,9 @@ Blockly.Blocks['yolobit_mqtt_publish_value'] = {
   init: function() {
     this.appendValueInput('VALUE')
         .setCheck(['Number','String'])
-        .appendField('gửi giá trị');
+        .appendField('Gửi giá trị');
     this.appendDummyInput()
-        .appendField('lên V')
+        .appendField('lên kênh')
         .appendField(new Blockly.FieldDropdown([
           ['V0','0'], ['V1','1'], ['V2','2'], ['V3','3'],
           ['V4','4'], ['V5','5'], ['V6','6'], ['V7','7'],
@@ -158,7 +158,7 @@ Blockly.Python['yolobit_mqtt_publish_value'] = function(block) {
 Blockly.Blocks['yolobit_mqtt_read_virtual_pin_value'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField('giá trị từ V')
+        .appendField('Giá trị từ kênh')
         .appendField(new Blockly.FieldDropdown([
           ['V0','0'], ['V1','1'], ['V2','2'], ['V3','3'],
           ['V4','4'], ['V5','5'], ['V6','6'], ['V7','7'],
