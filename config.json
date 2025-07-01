@@ -4,7 +4,7 @@
     "libs": [
         "umqtt_robust.py",
         "umqtt_simple.py",
-        "kdi_era.py"
+        "mqtt.py"
     ],
     "blocks": [
         "definition.js"

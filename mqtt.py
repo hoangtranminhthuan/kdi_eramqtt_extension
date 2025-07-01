@@ -153,6 +153,7 @@ class MQTT:
             self.client.connect()
             self.resubscribe()
         self.client.check_msg()
+        
 
     def publish(self, topic: str, message: str) -> None:
         """
