@@ -58,7 +58,7 @@ class MQTT:
             count = 0
             while not self.station.isconnected():
                 count += 1
-                if count > 150:  # ~15 seconds
+                if count > 300:  # ~15 seconds
                     say('Failed to connect to WiFi')
                     raise
                 time.sleep_ms(100)
