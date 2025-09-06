@@ -70,36 +70,26 @@ class MQTT:
         return self.station.isconnected()
 
     def connect_broker(self,
-                       server: str = 'mqtt1.eoh.io',
-                       port:   int = 1883,
-                       username: str = '',
-                       password: str = '') -> None:
+                    server: str = 'mqtt1.eoh.io',
+                    port:   int = 1883,
+                    username: str = '',
+                    password: str = '') -> None:
         client_id = ubinascii.hexlify(machine.unique_id()).decode() \
                     + str(time.ticks_ms())
-        
-        # 1) Tạo client
+        # 1) Tạo client và connect
         self.client = MQTTClient(client_id, server, port, username, password)
-        
-        # 2) MỚI: Thiết lập "Last Will and Testament" (LWT)
-        # Broker sẽ tự động publish tin nhắn này nếu thiết bị mất kết nối đột ngột
-        offline_topic = f"eoh/chip/{username}/is_online"
-        offline_payload = '{"ol":0}'
-        self.client.set_last_will(offline_topic, offline_payload, retain=True, qos=1)
-        
-        # 3) Connect tới broker
         try:
-            # Ngắt kết nối cũ nếu có để đảm bảo phiên làm việc mới sạch sẽ
-            self.client.disconnect() 
+            self.client.disconnect()
         except:
             pass
         self.client.connect()
         self.client.set_callback(self.__on_receive_message)
         say('Connected to MQTT broker---------------------------v1')
 
-        # 4) Publish trạng thái "online" sau khi kết nối thành công
+        # 2) Chỉ publish "online" thôi
         online_topic   = f"eoh/chip/{username}/is_online"
         online_payload = '{"ol":1}'
-        # retain=True để broker lưu trạng thái online này
+        # retain=True để broker lưu trạng thái online
         self.client.publish(online_topic, online_payload, retain=True, qos=1)
         say(f'Announced online on {online_topic}')
 
