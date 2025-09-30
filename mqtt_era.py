@@ -86,12 +86,13 @@ class MQTT:
         self.client.set_callback(self.__on_receive_message)
         say('Connected to MQTT broker---------------------------v1')
 
-        # 2) Chỉ publish "online" thôi
-        online_topic   = f"eoh/chip/{username}/is_online"
-        online_payload = '{"ol":1}'
+        # 2) Publish online VỚI wifi_ssid và ask_configuration
+        online_topic = f"eoh/chip/{username}/is_online"
+        online_payload = f'{{"ol":1,"wifi_ssid":"{self.wifi_ssid}","ask_configuration":1}}'
+        
         # retain=True để broker lưu trạng thái online
         self.client.publish(online_topic, online_payload, retain=True, qos=1)
-        say(f'Announced online on {online_topic}')
+        say(f'Announced online with config request on {online_topic}')
 
 
     def subscribe_config_down(self, token: str, callback=None) -> None:
