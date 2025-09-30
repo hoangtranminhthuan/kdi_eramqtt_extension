@@ -74,8 +74,11 @@ class MQTT:
                     port:   int = 1883,
                     username: str = '',
                     password: str = '') -> None:
+        self.username = username  # Lưu username để dùng sau
+        
         client_id = ubinascii.hexlify(machine.unique_id()).decode() \
                     + str(time.ticks_ms())
+        
         # 1) Tạo client và connect
         self.client = MQTTClient(client_id, server, port, username, password)
         try:
@@ -84,15 +87,35 @@ class MQTT:
             pass
         self.client.connect()
         self.client.set_callback(self.__on_receive_message)
-        say('Connected to MQTT broker---------------------------v1')
-
-        # 2) Publish online VỚI wifi_ssid và ask_configuration
+        say('Connected to MQTT broker')
+        
+        # 2) Subscribe topic down với handler
+        down_topic = f"eoh/chip/{username}/down"
+        self.callbacks[down_topic] = self._handle_config_down  # Đăng ký callback
+        self.client.subscribe(down_topic)  # Subscribe
+        say(f"Subscribed to {down_topic}")
+        
+        # 3) Đợi để đảm bảo subscription hoàn tất
+        time.sleep_ms(500)
+        
+        # 4) Gửi online với ask_configuration
         online_topic = f"eoh/chip/{username}/is_online"
         online_payload = f'{{"ol":1,"wifi_ssid":"{self.wifi_ssid}","ask_configuration":1}}'
-        
-        # retain=True để broker lưu trạng thái online
         self.client.publish(online_topic, online_payload, retain=True, qos=1)
-        say(f'Announced online with config request on {online_topic}')
+        say(f'Announced online with config request')
+        
+        # 5) Đợi và xử lý config message
+        say('Waiting for configuration...')
+        timeout = 0
+        while len(self.virtual_pins) == 0 and timeout < 50:  # Đợi max 5 giây
+            self.client.check_msg()  # Check for incoming messages
+            time.sleep_ms(100)
+            timeout += 1
+        
+        if len(self.virtual_pins) > 0:
+            say(f'Configuration received: {len(self.virtual_pins)} pins configured')
+        else:
+            say('Warning: No configuration received')
 
 
     def subscribe_config_down(self, token: str, callback=None) -> None:
@@ -148,11 +171,36 @@ class MQTT:
         print("[MQTT]   check_message()")
         if not self.client:
             return
+        
         if not self.wifi_connected():
             say('WiFi disconnected. Reconnecting...')
+            
+            # Reconnect WiFi
             self.connect_wifi(self.wifi_ssid, self.wifi_password)
+            
+            # Reconnect MQTT
             self.client.connect()
+            
+            # Re-subscribe tất cả topics
             self.resubscribe()
+            
+            # Gửi lại online với ask_configuration sau reconnect
+            online_topic = f"eoh/chip/{self.username}/is_online"
+            online_payload = f'{{"ol":1,"wifi_ssid":"{self.wifi_ssid}","ask_configuration":1}}'
+            self.client.publish(online_topic, online_payload, retain=True, qos=1)
+            say('Re-announced online with config request after reconnect')
+            
+            # Đợi nhận lại configuration
+            timeout = 0
+            while timeout < 30:  # Đợi max 3 giây
+                self.client.check_msg()
+                time.sleep_ms(100)
+                timeout += 1
+                if len(self.virtual_pins) > 0:
+                    say(f'Configuration re-received: {len(self.virtual_pins)} pins')
+                    break
+        
+        # Check messages bình thường
         self.client.check_msg()
 
     def publish(self, topic: str, message: str) -> None:
@@ -168,9 +216,9 @@ class MQTT:
         self.client.publish(full_topic, message)
         self.last_sent = time.ticks_ms()
 
-    def virtual_write(self, pin: int, value: Union[int, float, str], username: str = '') -> None:
+    def virtual_write(self, pin: int, value, username: str = '') -> None:
         """
-        Publish a value to a virtual pin. Payload is JSON {"value": value}.
+        Publish a value to a virtual pin with error handling.
         """
         say(f"virtual_write(pin={pin}, value={value}, username={username})")
         if pin not in self.virtual_pins:
@@ -178,15 +226,15 @@ class MQTT:
             return
 
         cfg_id = self.virtual_pins[pin]
-        token = username or getattr(self, 'token', '')
         topic = f"eoh/chip/{username}/config/{cfg_id}/value"
-        # Build JSON payload using ujson
-        # Ensure payload uses integer 'v' key, as required by server
         payload = f'{{"v": {value}}}'
 
-        say(f" virtual publish → topic={topic}, payload={payload}")
-        # Publish with retain and QoS=1 to ensure delivery
-        self.client.publish(topic, str(payload), retain=True, qos=1)
+        try:
+            self.client.publish(topic, payload, retain=True, qos=1)
+            say(f" Virtual publish success → topic={topic}")
+        except Exception as e:
+            say(f" Virtual publish failed: {e}")
+            # Có thể lưu vào buffer để gửi lại sau
         
     def subscribe_virtual_pin(self, pin: int, token: str, callback=None) -> None:
         """
