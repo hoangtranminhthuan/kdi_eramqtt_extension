@@ -5,6 +5,7 @@ import machine
 import ujson
 from umqtt_robust import MQTTClient
 from utility import say
+import gc
 
 class MQTT:
     def __init__(self):
@@ -16,9 +17,9 @@ class MQTT:
         self.wifi_password = ''
         self.callbacks = {}
         self.last_sent = 0
-        # mapping pin_number → config_id
         self.virtual_pins = {}
         self.virtual_pin_values = {}
+        self.subscribed_pins = set()
 
     def __on_receive_message(self, topic: bytes, msg: bytes) -> None:
         topic_str = topic.decode('ascii')
@@ -41,7 +42,6 @@ class MQTT:
             self.station.active(False)
             time.sleep_ms(500)
 
-        # Try up to 5 times
         for i in range(5):
             try:
                 self.station.active(True)
@@ -58,7 +58,7 @@ class MQTT:
             count = 0
             while not self.station.isconnected():
                 count += 1
-                if count > 300:  # ~15 seconds
+                if count > 300:  # ~30 seconds
                     say('Failed to connect to WiFi')
                     raise
                 time.sleep_ms(100)
@@ -68,18 +68,59 @@ class MQTT:
 
     def wifi_connected(self) -> bool:
         return self.station.isconnected()
+    
+    # Check and reconnect WiFi and MQTT if needed
+    def _check_and_reconnect(self):
+        """
+        Private method to check connections and reconnect automatically.
+        This is called internally by other methods.
+        """
+        gc.collect()
+        try:
+            # only proceed if client exists
+            if not self.client:
+                return
+
+            # 1. Check WiFi connection
+            if not self.station.isconnected():
+                say("WiFi disconnected. Attempting to reconnect...")
+                # Disconnect old MQTT client
+                try:
+                    self.client.disconnect()
+                except:
+                    pass
+
+                # Reconnect WiFi
+                self.connect_wifi(self.wifi_ssid, self.wifi_password)
+
+                # Reconnect Broker and re-subscribe all topics
+                self.connect_broker(self.server, self.port, self.username, self.password)
+                self.resubscribe()
+                say("Reconnection successful.")
+
+            # 2. If WiFi is still OK, umqtt_robust will handle MQTT reconnect automatically
+            # We just need to call any command to trigger it if needed
+            # self.client.ping() # Safe ping() command to check
+
+        except Exception as e:
+            say(f"Auto-reconnect failed: {e}")
+            time.sleep(5) # Wait 5 seconds before trying again on the next call
 
     def connect_broker(self,
                     server: str = 'mqtt1.eoh.io',
                     port:   int = 1883,
                     username: str = '',
                     password: str = '') -> None:
-        self.username = username  # Lưu username để dùng sau
+        self.server = server
+        self.port = port
+        self.password = password
+
+        self.username = username
         
         client_id = ubinascii.hexlify(machine.unique_id()).decode() \
                     + str(time.ticks_ms())
-        
-        # 1) Tạo client và connect
+
+        # 1) Create client and connect
         self.client = MQTTClient(client_id, server, port, username, password)
         try:
             self.client.disconnect()
@@ -89,25 +130,28 @@ class MQTT:
         self.client.set_callback(self.__on_receive_message)
         say('Connected to MQTT broker')
         
-        # 2) Subscribe topic down với handler
+        self.subscribed_pins.clear()
+
+        
+        # 2) Subscribe topic down with handler
         down_topic = f"eoh/chip/{username}/down"
-        self.callbacks[down_topic] = self._handle_config_down  # Đăng ký callback
+        self.callbacks[down_topic] = self._handle_config_down  # Register callback
         self.client.subscribe(down_topic)  # Subscribe
         say(f"Subscribed to {down_topic}")
-        
-        # 3) Đợi để đảm bảo subscription hoàn tất
+
+        # 3) Wait to ensure subscription is complete
         time.sleep_ms(500)
-        
-        # 4) Gửi online với ask_configuration
+
+        # 4) Send online with ask_configuration
         online_topic = f"eoh/chip/{username}/is_online"
         online_payload = f'{{"ol":1,"wifi_ssid":"{self.wifi_ssid}","ask_configuration":1}}'
         self.client.publish(online_topic, online_payload, retain=True, qos=1)
         say(f'Announced online with config request')
-        
-        # 5) Đợi và xử lý config message
+
+        # 5) Wait for and process config message
         say('Waiting for configuration...')
         timeout = 0
-        while len(self.virtual_pins) == 0 and timeout < 50:  # Đợi max 5 giây
+        while len(self.virtual_pins) == 0 and timeout < 50:  # Wait max 5 seconds
             self.client.check_msg()  # Check for incoming messages
             time.sleep_ms(100)
             timeout += 1
@@ -163,38 +207,69 @@ class MQTT:
         for t in self.callbacks.keys():
             self.client.subscribe(t)
 
-    def publish(self, topic: str, message: str) -> None:
+    def virtual_write(self, pin: int, value, username: str = '', 
+                      qos: int = 0, debug: bool = True) -> bool:
         """
-        Publish a string message to a topic, throttled to 1s between sends.
+        Publish a value to a virtual pin (optimized for Blockly).
+        
+        Args:
+            pin: Virtual pin number (0-499)
+            value: Value to send (int, float, string, bool)
+            username: MQTT token (default: use self.username)
+            qos: Quality of Service (0=fast, 1=reliable, default=0)
+            debug: Enable debug logging (default=False)
+        
+        Returns:
+            bool: True if successful, False if failed
         """
-        if not self.client:
-            return
-        now = time.ticks_ms()
-        if now - self.last_sent < 100:
-            time.sleep_ms(100 - (now - self.last_sent))
-        full_topic = topic
-        self.client.publish(full_topic, message)
-        self.last_sent = time.ticks_ms()
-
-    def virtual_write(self, pin: int, value: Union[int, float, str], username: str = '') -> None:
-        """
-        Publish a value to a virtual pin. Payload is JSON {"value": value}.
-        """
-        say(f"virtual_write(pin={pin}, value={value}, username={username})")
+        self._check_and_reconnect()
+        
+        if self.client:
+            self.client.check_msg()
+        
+        if debug:
+            print(f"[V{pin}] Sending: {value}")
+        
         if pin not in self.virtual_pins:
-            say(f"  Pin {pin} chưa được đăng ký")
-            return
-
+            if debug:
+                print(f"[Error] V{pin} not configured")
+            return False
+        
         cfg_id = self.virtual_pins[pin]
-        token = username or getattr(self, 'token', '')
-        topic = f"eoh/chip/{username}/config/{cfg_id}/value"
-        # Build JSON payload using ujson
-        # Ensure payload uses integer 'v' key, as required by server
-        payload = f'{{"v": {value}}}'
-
-        say(f" virtual publish → topic={topic}, payload={payload}")
-        # Publish with retain and QoS=1 to ensure delivery
-        self.client.publish(topic, str(payload), retain=True, qos=1)
+        token = username or self.username
+        topic = f"eoh/chip/{token}/config/{cfg_id}/value"
+        
+        # Handle different value types
+        if isinstance(value, bool):
+            # True → 1, False → 0
+            payload = f'{{"v": {1 if value else 0}}}'
+        elif isinstance(value, str):
+            # String cần quotes
+            payload = f'{{"v": "{value}"}}'
+        else:
+            # Number (int, float)
+            payload = f'{{"v": {value}}}'
+        
+        # Publish với throttle nhẹ
+        try:
+            # Throttle 10ms (thay vì 100ms)
+            now = time.ticks_ms()
+            elapsed = time.ticks_diff(now, self.last_sent)
+            if elapsed < 10:
+                time.sleep_ms(10 - elapsed)
+            
+            # Publish (qos=0 mặc định cho speed)
+            self.client.publish(topic, payload, retain=True, qos=0)
+            self.last_sent = time.ticks_ms()
+            
+            if debug:
+                print(f"[V{pin}] Sent successfully")
+            return True
+            
+        except Exception as e:
+            if debug:
+                print(f"[Error] Publish failed: {e}")
+            return False
         
     def subscribe_virtual_pin(self, pin: int, token: str, callback=None) -> None:
         """
@@ -213,6 +288,8 @@ class MQTT:
             
         self.on_receive_message(topic, cb)
         say(f"Subscribed to virtual pin V{pin}")
+        self.subscribed_pins.add(pin)
+
 
     def _handle_virtual_pin_data(self, msg: str, pin: int = None) -> None:
         """
@@ -253,11 +330,30 @@ class MQTT:
         return data.get('value', None) if data else None    
     
     def subscribe_and_get(self, pin: int, token: str) -> any:
-        self.subscribe_virtual_pin(pin, token)
+        self._check_and_reconnect()
+        
+        newly_subscribed = False
+        if pin not in self.subscribed_pins:
+            self.subscribe_virtual_pin(pin, token)
+            newly_subscribed = True
+
+        if self.client:
+           
+            if newly_subscribed:
+                
+                timeout = 0
+                
+                while self.get_virtual_pin_simple_value(pin) is None and timeout < 30:
+                    self.client.check_msg()
+                    time.sleep_ms(100)
+                    timeout += 1
+            else:
+                
+                self.client.check_msg()
+
         return self.get_virtual_pin_simple_value(pin)
 
 mqtt = MQTT()
-
 
 
 
