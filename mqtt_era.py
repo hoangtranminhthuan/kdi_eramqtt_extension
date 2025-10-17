@@ -20,6 +20,7 @@ class MQTT:
         self.virtual_pins = {}
         self.virtual_pin_values = {}
         self.subscribed_pins = set()
+        self._topic_cache = {}
 
     def __on_receive_message(self, topic: bytes, msg: bytes) -> None:
         topic_str = topic.decode('utf-8')
@@ -149,10 +150,10 @@ class MQTT:
         self.client.set_callback(self.__on_receive_message)
         say('Connected to MQTT broker')
         
-        online_topic = f"eoh/chip/{username}/is_online"
-        online_payload = f'{{"ol":0}}'
-        self.client.publish(online_topic, online_payload, retain=True, qos=1)
-        time.sleep_ms(500)
+        # online_topic = f"eoh/chip/{username}/is_online"
+        # online_payload = f'{{"ol":0}}'
+        # self.client.publish(online_topic, online_payload, retain=True, qos=1)
+        # time.sleep_ms(500)
         
         self.subscribed_pins.clear()
 
@@ -206,7 +207,8 @@ class MQTT:
                       .get('devices', [])
                       
         
-        self.virtual_pins.clear()              
+        self.virtual_pins.clear()      
+        self._topic_cache.clear()        
                       
         for d in devices:
             for v in d.get('virtual_pins', []):
@@ -261,7 +263,16 @@ class MQTT:
         
         cfg_id = self.virtual_pins[pin]
         token = username or self.username
-        topic = f"eoh/chip/{token}/config/{cfg_id}/value"
+        # topic = f"eoh/chip/{token}/config/{cfg_id}/value"
+        
+        if pin not in self._topic_cache:
+            # Nếu topic cho pin này chưa có trong cache, tạo mới và lưu lại
+            cfg_id = self.virtual_pins[pin]
+            token = username or self.username
+            self._topic_cache[pin] = f"eoh/chip/{token}/config/{cfg_id}/value"
+        
+        # Luôn lấy topic từ cache để tái sử dụng
+        topic = self._topic_cache[pin]
         
         # Handle different value types
         if isinstance(value, bool):
